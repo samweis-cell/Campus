@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const APP_VERSION = 'v8.1';
+  const APP_VERSION = 'v9.0';
   const versionElem = document.getElementById('app-version');
   if (versionElem) versionElem.innerText = APP_VERSION;
 
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(modalId).classList.add('active');
   }
 
-  // Umschalten Unterricht vs. Pause im Formular
+  // Formular-Elemente
   const typeSelect = document.getElementById('sched-type');
   const fieldsLesson = document.getElementById('fields-lesson');
   const fieldsPause = document.getElementById('fields-pause');
@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const wrapperPauseAfter = document.getElementById('wrapper-pause-after');
   const durationInput = document.getElementById('sched-duration');
   const slotSelect = document.getElementById('sched-slot');
+  const pauseAfterSelect = document.getElementById('sched-pause-after');
   const startHH = document.getElementById('sched-start-hh');
   const startMM = document.getElementById('sched-start-mm');
 
@@ -91,15 +92,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Zeit-Hilfsfunktionen
+  function calcEndTime(hh, mm, durationMinutes) {
+    let startMins = parseInt(hh) * 60 + parseInt(mm);
+    let endMins = startMins + parseInt(durationMinutes);
+    let endHH = Math.floor(endMins / 60) % 24;
+    let endMM = endMins % 60;
+    
+    return {
+      hh: String(endHH).padStart(2, '0'),
+      mm: String(endMM).padStart(2, '0'),
+      str: `${String(endHH).padStart(2, '0')}:${String(endMM).padStart(2, '0')}`
+    };
+  }
+
+  // Automatische Zeitberechnung für Pausen
+  function fillPauseTimeData() {
+    const afterSlot = pauseAfterSelect.value;
+    const st = slotTimes[afterSlot];
+    if (st && st.hh && st.mm && st.duration) {
+      const endTime = calcEndTime(st.hh, st.mm, st.duration);
+      startHH.value = endTime.hh;
+      startMM.value = endTime.mm;
+    }
+  }
+
+  function fillModalSlotData() {
+    const slot = slotSelect.value;
+    if (slotTimes[slot]) {
+      startHH.value = slotTimes[slot].hh || '';
+      startMM.value = slotTimes[slot].mm || '';
+      durationInput.value = slotTimes[slot].duration || '45';
+    }
+  }
+
   typeSelect.addEventListener('change', () => {
     updateTypeVisibility();
     if (typeSelect.value === 'pause') {
       durationInput.value = '5';
+      fillPauseTimeData();
     } else {
       durationInput.value = '45';
       fillModalSlotData();
     }
   });
+
+  pauseAfterSelect.addEventListener('change', fillPauseTimeData);
+  slotSelect.addEventListener('change', fillModalSlotData);
 
   document.getElementById('btn-open-schedule-modal').addEventListener('click', () => {
     document.getElementById('form-schedule').reset();
@@ -112,28 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-open-grade-modal').addEventListener('click', () => openModal('modal-grade'));
   document.getElementById('btn-open-task-modal').addEventListener('click', () => openModal('modal-task'));
   document.getElementById('btn-open-exam-modal').addEventListener('click', () => openModal('modal-exam'));
-
-  function fillModalSlotData() {
-    const slot = slotSelect.value;
-    if (slotTimes[slot]) {
-      startHH.value = slotTimes[slot].hh || '';
-      startMM.value = slotTimes[slot].mm || '';
-      durationInput.value = slotTimes[slot].duration || '45';
-    }
-  }
-
-  slotSelect.addEventListener('change', fillModalSlotData);
-
-  function calcEndTime(hh, mm, durationMinutes) {
-    let startMins = parseInt(hh) * 60 + parseInt(mm);
-    let endMins = startMins + parseInt(durationMinutes);
-    let endHH = Math.floor(endMins / 60) % 24;
-    let endMM = endMins % 60;
-    
-    let formatHH = String(endHH).padStart(2, '0');
-    let formatMM = String(endMM).padStart(2, '0');
-    return `${formatHH}:${formatMM}`;
-  }
 
   // HEUTE MODUS
   function updateHeuteMode() {
@@ -253,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hh = String(st.hh).padStart(2, '0');
         const mm = String(st.mm).padStart(2, '0');
         const startStr = `${hh}:${mm}`;
-        const endStr = calcEndTime(hh, mm, st.duration);
+        const endStr = calcEndTime(hh, mm, st.duration).str;
         timeInfo = `${startStr} - ${endStr}`;
       }
 
@@ -317,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const duration = document.getElementById('sched-duration').value;
 
     const startStr = `${hh}:${mm}`;
-    const endStr = calcEndTime(hh, mm, duration);
+    const endStr = calcEndTime(hh, mm, duration).str;
 
     if (type === 'pause') {
       const afterSlot = document.getElementById('sched-pause-after').value;

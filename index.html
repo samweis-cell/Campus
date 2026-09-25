@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Schul-Planer</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
@@ -10,44 +10,44 @@
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- HEADER -->
   <header class="app-header">
-    <div>
-      <h1 id="header-title">Heute</h1>
+    <div class="header-content">
+      <div>
+        <h1 id="header-title">Heute</h1>
+        <span id="header-date" class="header-date"></span>
+      </div>
       <span id="app-version" class="version-badge">v9.0</span>
     </div>
-    <span id="header-date" class="date-badge"></span>
   </header>
 
-  <!-- Hauptinhalt (Tabs) -->
-  <main class="content">
-    
-    <!-- Tab 1: HEUTE -->
+  <!-- INHALT -->
+  <main class="app-content">
+
+    <!-- TAB 1: HEUTE -->
     <section id="tab-heute" class="tab-content active">
-      <div class="card status-card">
-        <span class="status-tag" id="status-tag">Aktueller Status</span>
-        <h2 id="current-subject">Lade Status...</h2>
-        <p id="current-details">-</p>
-        <p class="next-up" id="next-subject">-</p>
+      <div class="card current-card">
+        <div class="card-subtitle">Aktuelle Stunde</div>
+        <div id="current-subject" class="current-title">Frei 🎉</div>
+        <div id="current-details" class="current-sub">Keine Stunden für heute eingetragen</div>
+        <div id="next-subject" class="next-title">-</div>
       </div>
 
-      <h3>📝 Heute erledigen</h3>
+      <div class="section-title">Anstehende Aufgaben</div>
       <div id="heute-tasks" class="task-list"></div>
     </section>
 
-    <!-- Tab 2: STUNDENPLAN -->
+    <!-- TAB 2: STUNDENPLAN -->
     <section id="tab-stundenplan" class="tab-content">
-      <div class="section-header">
-        <h2>Stundenplan</h2>
-        <button class="btn-primary" id="btn-open-schedule-modal">+ Eintrag</button>
+      <div class="actions-bar">
+        <button id="btn-open-schedule-modal" class="btn btn-primary">+ Stundenplan-Eintrag</button>
       </div>
-      
-      <!-- Klassische Stundenplan-Tabelle -->
+
       <div class="table-container">
         <table class="schedule-table">
           <thead>
             <tr>
-              <th>Zeit</th>
+              <th>Std / Zeit</th>
               <th>Mo</th>
               <th>Di</th>
               <th>Mi</th>
@@ -56,90 +56,127 @@
             </tr>
           </thead>
           <tbody id="schedule-table-body">
-            <!-- Wird dynamisch von app.js befüllt -->
+            <!-- Wird per JS befüllt -->
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- Tab 3: AUFGABEN -->
+    <!-- TAB 3: AUFGABEN -->
     <section id="tab-aufgaben" class="tab-content">
-      <div class="section-header">
-        <h2>Aufgaben</h2>
-        <button class="btn-primary" id="btn-open-task-modal">+ Aufgabe</button>
+      <div class="actions-bar">
+        <button id="btn-open-task-modal" class="btn btn-primary">+ Aufgabe hinzufügen</button>
       </div>
       <div id="all-tasks" class="task-list"></div>
     </section>
 
-    <!-- Tab 4: ARBEITEN -->
+    <!-- TAB 4: ARBEITEN -->
     <section id="tab-arbeiten" class="tab-content">
-      <div class="section-header">
-        <h2>Anstehende Arbeiten</h2>
-        <button class="btn-primary" id="btn-open-exam-modal">+ Arbeit</button>
+      <div class="actions-bar">
+        <button id="btn-open-exam-modal" class="btn btn-primary">+ Arbeit eintragen</button>
       </div>
       <div id="exam-list" class="task-list"></div>
     </section>
 
-    <!-- Tab 5: NOTEN & SIMULATOR -->
+    <!-- TAB 5: NOTEN -->
     <section id="tab-noten" class="tab-content">
-      <div class="section-header">
-        <h2>Noten & Simulator</h2>
-        <button class="btn-primary" id="btn-open-grade-modal">+ Note</button>
+      <div class="card summary-card">
+        <div class="card-subtitle">Notendurchschnitt</div>
+        <div id="grade-average" class="current-title">-</div>
       </div>
 
-      <div class="card">
-        <h3>Gesamtschnitt</h3>
-        <p class="grade-badge" id="grade-average">-</p>
-      </div>
-
-      <!-- Simulator -->
       <div class="card simulator-card">
-        <h3>🎯 Noten-Simulator</h3>
-        <p class="sub-text">Welche Note brauchst du in der nächsten Arbeit?</p>
-        <div class="row">
-          <input type="number" id="sim-target" placeholder="Wunschschnitt (z.B. 2.0)" step="0.1" min="1" max="6">
-          <button class="btn-secondary" id="btn-calc-sim">Berechnen</button>
+        <h3>Noten-Simulator</h3>
+        <p>Welchen Schnitt möchtest du erreichen?</p>
+        <div class="form-group inline-group">
+          <input type="number" id="sim-target" step="0.1" placeholder="z. B. 2.0">
+          <button id="btn-calc-sim" class="btn btn-secondary">Berechnen</button>
         </div>
-        <p id="sim-result" class="sim-result-text"></p>
+        <div id="sim-result" class="sim-result"></div>
       </div>
 
-      <h3>Notenliste</h3>
+      <div class="actions-bar">
+        <button id="btn-open-grade-modal" class="btn btn-primary">+ Note eintragen</button>
+      </div>
+
       <div id="grades-list" class="task-list"></div>
     </section>
 
   </main>
 
-  <!-- MODALS -->
-  <div id="modal-backdrop" class="modal-backdrop">
-    
-    <!-- Modal: Stunde / Pause -->
-    <div id="modal-schedule" class="modal-card">
-      <h3>Eintrag hinzufügen</h3>
-      <form id="form-schedule">
-        
+  <!-- NAVIGATIONSLEISTE UNTEN -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="heute">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Heute</span>
+    </button>
+    <button class="nav-btn" data-tab="stundenplan">
+      <span class="nav-icon">🕒</span>
+      <span class="nav-label">Plan</span>
+    </button>
+    <button class="nav-btn" data-tab="aufgaben">
+      <span class="nav-icon">✅</span>
+      <span class="nav-label">Aufgaben</span>
+    </button>
+    <button class="nav-btn" data-tab="arbeiten">
+      <span class="nav-icon">📝</span>
+      <span class="nav-label">Arbeiten</span>
+    </button>
+    <button class="nav-btn" data-tab="noten">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Noten</span>
+    </button>
+  </nav>
+
+  <!-- MODAL BACKDROP -->
+  <div id="modal-backdrop" class="modal-backdrop" onclick="closeModal()"></div>
+
+  <!-- MODAL: STUNDENPLAN / PAUSE -->
+  <div id="modal-schedule" class="modal-card">
+    <h3>Eintrag hinzufügen</h3>
+    <form id="form-schedule">
+      <div class="form-group">
         <label>Typ</label>
         <select id="sched-type">
-          <option value="lesson">📚 Unterrichtsstunde</option>
-          <option value="pause">☕ Pause</option>
+          <option value="lesson">Unterrichtsstunde</option>
+          <option value="pause">Pause</option>
         </select>
+      </div>
 
-        <!-- Auswahl für Unterrichtsstunde -->
-        <div id="wrapper-lesson-slot">
-          <label>Stunde</label>
-          <select id="sched-slot">
-            <option value="1">1. Stunde</option>
-            <option value="2">2. Stunde</option>
-            <option value="3">3. Stunde</option>
-            <option value="4">4. Stunde</option>
-            <option value="5">5. Stunde</option>
-            <option value="6">6. Stunde</option>
-            <option value="7">7. Stunde</option>
-            <option value="8">8. Stunde</option>
-            <option value="9">9. Stunde</option>
-            <option value="10">10. Stunde</option>
-          </select>
+      <div id="wrapper-lesson-slot" class="form-group">
+        <label>Stunde</label>
+        <select id="sched-slot">
+          <option value="1">1. Stunde</option>
+          <option value="2">2. Stunde</option>
+          <option value="3">3. Stunde</option>
+          <option value="4">4. Stunde</option>
+          <option value="5">5. Stunde</option>
+          <option value="6">6. Stunde</option>
+          <option value="7">7. Stunde</option>
+          <option value="8">8. Stunde</option>
+          <option value="9">9. Stunde</option>
+          <option value="10">10. Stunde</option>
+        </select>
+      </div>
 
-          <label>Wochentag</label>
+      <div id="wrapper-pause-after" class="form-group" style="display: none;">
+        <label>Pause nach der Stunde</label>
+        <select id="sched-pause-after">
+          <option value="1">Nach der 1. Stunde</option>
+          <option value="2">Nach der 2. Stunde</option>
+          <option value="3">Nach der 3. Stunde</option>
+          <option value="4">Nach der 4. Stunde</option>
+          <option value="5">Nach der 5. Stunde</option>
+          <option value="6">Nach der 6. Stunde</option>
+          <option value="7">Nach der 7. Stunde</option>
+          <option value="8">Nach der 8. Stunde</option>
+          <option value="9">Nach der 9. Stunde</option>
+        </select>
+      </div>
+
+      <div id="fields-lesson">
+        <div class="form-group">
+          <label>Tag</label>
           <select id="sched-day">
             <option value="Mo">Montag</option>
             <option value="Di">Dienstag</option>
@@ -148,146 +185,135 @@
             <option value="Fr">Freitag</option>
           </select>
         </div>
-
-        <!-- Auswahl für Pause -->
-        <div id="wrapper-pause-after" style="display: none;">
-          <label>Pause nach welcher Stunde?</label>
-          <select id="sched-pause-after">
-            <option value="1">Nach der 1. Stunde</option>
-            <option value="2">Nach der 2. Stunde</option>
-            <option value="3">Nach der 3. Stunde</option>
-            <option value="4">Nach der 4. Stunde</option>
-            <option value="5">Nach der 5. Stunde</option>
-            <option value="6">Nach der 6. Stunde</option>
-            <option value="7">Nach der 7. Stunde</option>
-            <option value="8">Nach der 8. Stunde</option>
-            <option value="9">Nach der 9. Stunde</option>
-          </select>
-        </div>
-
-        <label>Startzeit</label>
-        <div class="row time-input-row">
-          <input type="number" id="sched-start-hh" placeholder="HH (z.B. 07)" min="0" max="23" required>
-          <span class="time-colon">:</span>
-          <input type="number" id="sched-start-mm" placeholder="MM (z.B. 50)" min="0" max="59" required>
-        </div>
-
-        <label>Dauer (in Minuten)</label>
-        <input type="number" id="sched-duration" placeholder="45 oder 5" value="45" min="1" required>
-
-        <!-- Unterrichts-Felder -->
-        <div id="fields-lesson">
+        <div class="form-group">
           <label>Fach</label>
           <input type="text" id="sched-subject" placeholder="z. B. Mathematik">
-
-          <label>Lehrer</label>
-          <input type="text" id="sched-teacher" placeholder="z. B. Fr. Schmidt">
-
-          <label>Raum</label>
-          <input type="text" id="sched-room" placeholder="z. B. 204">
         </div>
-
-        <!-- Pausen-Feld -->
-        <div id="fields-pause" style="display: none;">
-          <label>Name der Pause (optional)</label>
-          <input type="text" id="sched-pause-name" placeholder="z. B. Kleine Pause / Große Pause">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Lehrer</label>
+            <input type="text" id="sched-teacher" placeholder="z. B. Hr. Müller">
+          </div>
+          <div class="form-group">
+            <label>Raum</label>
+            <input type="text" id="sched-room" placeholder="z. B. A102">
+          </div>
         </div>
+      </div>
 
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
-          <button type="submit" class="btn-primary">Speichern</button>
+      <div id="fields-pause" style="display: none;">
+        <div class="form-group">
+          <label>Name der Pause (Optional)</label>
+          <input type="text" id="sched-pause-name" placeholder="z. B. Hofpause / Große Pause">
         </div>
-      </form>
-    </div>
+      </div>
 
-    <!-- Modal: Note -->
-    <div id="modal-grade" class="modal-card">
-      <h3>Note eintragen</h3>
-      <form id="form-grade">
-        <label>Fach</label>
-        <input type="text" id="grade-subject" placeholder="z. B. Deutsch" required>
-
-        <label>Note (1+ bis 6)</label>
-        <select id="grade-value" required>
-          <option value="1+">1+</option>
-          <option value="1">1</option>
-          <option value="1-">1-</option>
-          <option value="2+">2+</option>
-          <option value="2" selected>2</option>
-          <option value="2-">2-</option>
-          <option value="3+">3+</option>
-          <option value="3">3</option>
-          <option value="3-">3-</option>
-          <option value="4+">4+</option>
-          <option value="4">4</option>
-          <option value="4-">4-</option>
-          <option value="5+">5+</option>
-          <option value="5">5</option>
-          <option value="5-">5-</option>
-          <option value="6">6</option>
-        </select>
-
-        <label>Gewichtung</label>
-        <select id="grade-weight">
-          <option value="0.6">Schriftlich (60%)</option>
-          <option value="0.4">Mündlich / Mitarbeit (40%)</option>
-          <option value="0.2">Kurztest (20%)</option>
-        </select>
-
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
-          <button type="submit" class="btn-primary">Speichern</button>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Startzeit (Std : Min)</label>
+          <div class="time-input-group">
+            <input type="number" id="sched-start-hh" placeholder="HH" min="0" max="23" required>
+            <span>:</span>
+            <input type="number" id="sched-start-mm" placeholder="MM" min="0" max="59" required>
+          </div>
         </div>
-      </form>
-    </div>
-
-    <!-- Modal: Arbeit/Klausur -->
-    <div id="modal-exam" class="modal-card">
-      <h3>Arbeit eintragen</h3>
-      <form id="form-exam">
-        <label>Fach</label>
-        <input type="text" id="exam-subject" placeholder="z. B. Physik" required>
-
-        <label>Datum</label>
-        <input type="date" id="exam-date" required>
-
-        <label>Thema / Notizen</label>
-        <input type="text" id="exam-topic" placeholder="z. B. Kapitel 3 & 4">
-
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
-          <button type="submit" class="btn-primary">Speichern</button>
+        <div class="form-group">
+          <label>Dauer (Minuten)</label>
+          <input type="number" id="sched-duration" value="45" required>
         </div>
-      </form>
-    </div>
+      </div>
 
-    <!-- Modal: Aufgabe -->
-    <div id="modal-task" class="modal-card">
-      <h3>Aufgabe hinzufügen</h3>
-      <form id="form-task">
-        <label>Beschreibung</label>
-        <input type="text" id="task-title" placeholder="z. B. Mathe S. 84 Nr. 3–6" required>
-
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
-          <button type="submit" class="btn-primary">Speichern</button>
-        </div>
-      </form>
-    </div>
-
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+        <button type="submit" class="btn btn-primary">Speichern</button>
+      </div>
+    </form>
   </div>
 
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav">
-    <button class="nav-btn active" data-tab="heute">🏠<span>Heute</span></button>
-    <button class="nav-btn" data-tab="stundenplan">📅<span>Plan</span></button>
-    <button class="nav-btn" data-tab="aufgaben">📝<span>Aufgaben</span></button>
-    <button class="nav-btn" data-tab="arbeiten">🧪<span>Arbeiten</span></button>
-    <button class="nav-btn" data-tab="noten">📊<span>Noten</span></button>
-  </nav>
+  <!-- MODAL: AUFGABE -->
+  <div id="modal-task" class="modal-card">
+    <h3>Neue Aufgabe</h3>
+    <form id="form-task">
+      <div class="form-group">
+        <label>Beschreibung</label>
+        <input type="text" id="task-title" placeholder="z. B. Mathe S. 42 Nr. 3" required>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+        <button type="submit" class="btn btn-primary">Speichern</button>
+      </div>
+    </form>
+  </div>
 
-  <script src="app.js"></script>
+  <!-- MODAL: ARBEIT -->
+  <div id="modal-exam" class="modal-card">
+    <h3>Neue Arbeit</h3>
+    <form id="form-exam">
+      <div class="form-group">
+        <label>Fach</label>
+        <input type="text" id="exam-subject" placeholder="z. B. Englisch" required>
+      </div>
+      <div class="form-group">
+        <label>Datum</label>
+        <input type="date" id="exam-date" required>
+      </div>
+      <div class="form-group">
+        <label>Thema / Stoff</label>
+        <input type="text" id="exam-topic" placeholder="z. B. Unit 3 Grammar">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+        <button type="submit" class="btn btn-primary">Speichern</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- MODAL: NOTE -->
+  <div id="modal-grade" class="modal-card">
+    <h3>Neue Note</h3>
+    <form id="form-grade">
+      <div class="form-group">
+        <label>Fach</label>
+        <input type="text" id="grade-subject" placeholder="z. B. Deutsch" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Note</label>
+          <select id="grade-value">
+            <option value="1+">1+</option><option value="1">1</option><option value="1-">1-</option>
+            <option value="2+">2+</option><option value="2" selected>2</option><option value="2-">2-</option>
+            <option value="3+">3+</option><option value="3">3</option><option value="3-">3-</option>
+            <option value="4+">4+</option><option value="4">4</option><option value="4-">4-</option>
+            <option value="5+">5+</option><option value="5">5</option><option value="5-">5-</option>
+            <option value="6">6</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Gewichtung</label>
+          <select id="grade-weight">
+            <option value="0.5">50% (Klassenarbeit)</option>
+            <option value="0.25">25% (Test / HÜ)</option>
+            <option value="0.25">25% (Mündlich)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+        <button type="submit" class="btn btn-primary">Speichern</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Cache-Busting via Query-Parameter ?v=9.0 -->
+  <script src="app.js?v=9.0"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registriert:', reg.scope))
+          .catch(err => console.error('SW Fehler:', err));
+      });
+    }
+  </script>
 </body>
 </html>
-
-
