@@ -23,23 +23,19 @@
     <section id="tab-heute" class="tab-content active">
       <div class="card status-card">
         <span class="status-tag" id="status-tag">Status</span>
-        <h2 id="current-subject">Frei</h2>
-        <p id="current-details">Kein Unterricht aktuell</p>
-        <p class="next-up" id="next-subject">-</p>
+        <h2 id="current-subject">Willkommen!</h2>
+        <p id="current-details">Trage deine ersten Fächer & Aufgaben ein.</p>
       </div>
 
       <h3>📝 Heute erledigen</h3>
       <div id="heute-tasks" class="task-list"></div>
-
-      <h3>🎒 Nicht vergessen</h3>
-      <div id="heute-packlist" class="pack-list"></div>
     </section>
 
     <!-- Tab 2: STUNDENPLAN -->
     <section id="tab-stundenplan" class="tab-content">
       <div class="section-header">
         <h2>Stundenplan</h2>
-        <button class="btn-primary" onclick="addScheduleItem()">+ Stunde eintragen</button>
+        <button class="btn-primary" id="btn-add-schedule">+ Stunde</button>
       </div>
       <div id="schedule-list" class="task-list"></div>
     </section>
@@ -48,7 +44,7 @@
     <section id="tab-aufgaben" class="tab-content">
       <div class="section-header">
         <h2>Aufgaben</h2>
-        <button class="btn-primary" onclick="addTaskPrompt()">+ Aufgabe</button>
+        <button class="btn-primary" id="btn-add-task">+ Aufgabe</button>
       </div>
       <div id="all-tasks" class="task-list"></div>
     </section>
@@ -57,7 +53,7 @@
     <section id="tab-arbeiten" class="tab-content">
       <div class="section-header">
         <h2>Anstehende Arbeiten</h2>
-        <button class="btn-primary" onclick="addExamPrompt()">+ Arbeit</button>
+        <button class="btn-primary" id="btn-add-exam">+ Arbeit</button>
       </div>
       <div id="exam-list" class="exam-list"></div>
     </section>
@@ -66,13 +62,13 @@
     <section id="tab-noten" class="tab-content">
       <div class="section-header">
         <h2>Notenübersicht</h2>
-        <button class="btn-primary" onclick="addGradePrompt()">+ Note</button>
+        <button class="btn-primary" id="btn-add-grade">+ Note</button>
       </div>
       <div class="card">
         <h3>Gesamtschnitt</h3>
         <p class="grade-badge" id="grade-average">-</p>
       </div>
-      <h3>Noten nach Fächern</h3>
+      <h3>Notenliste</h3>
       <div id="grades-list" class="task-list"></div>
     </section>
 
@@ -80,11 +76,11 @@
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="switchTab('heute', this)">🏠<span>Heute</span></button>
-    <button class="nav-btn" onclick="switchTab('stundenplan', this)">📅<span>Plan</span></button>
-    <button class="nav-btn" onclick="switchTab('aufgaben', this)">📝<span>Aufgaben</span></button>
-    <button class="nav-btn" onclick="switchTab('arbeiten', this)">🧪<span>Arbeiten</span></button>
-    <button class="nav-btn" onclick="switchTab('noten', this)">📊<span>Noten</span></button>
+    <button class="nav-btn active" data-tab="heute">🏠<span>Heute</span></button>
+    <button class="nav-btn" data-tab="stundenplan">📅<span>Plan</span></button>
+    <button class="nav-btn" data-tab="aufgaben">📝<span>Aufgaben</span></button>
+    <button class="nav-btn" data-tab="arbeiten">🧪<span>Arbeiten</span></button>
+    <button class="nav-btn" data-tab="noten">📊<span>Noten</span></button>
   </nav>
 
   <script src="app.js"></script>
