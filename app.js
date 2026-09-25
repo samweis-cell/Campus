@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const APP_VERSION = 'v7.0';
+  const APP_VERSION = 'v8.0';
   const versionElem = document.getElementById('app-version');
   if (versionElem) versionElem.innerText = APP_VERSION;
 
@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let tasks = JSON.parse(localStorage.getItem('pwa_tasks')) || [];
   let grades = JSON.parse(localStorage.getItem('pwa_grades')) || [];
   let schedule = JSON.parse(localStorage.getItem('pwa_schedule')) || [];
+  let pauses = JSON.parse(localStorage.getItem('pwa_pauses')) || [];
   let exams = JSON.parse(localStorage.getItem('pwa_exams')) || [];
   let slotTimes = JSON.parse(localStorage.getItem('pwa_slot_times')) || {};
 
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('pwa_tasks', JSON.stringify(tasks));
     localStorage.setItem('pwa_grades', JSON.stringify(grades));
     localStorage.setItem('pwa_schedule', JSON.stringify(schedule));
+    localStorage.setItem('pwa_pauses', JSON.stringify(pauses));
     localStorage.setItem('pwa_exams', JSON.stringify(exams));
     localStorage.setItem('pwa_slot_times', JSON.stringify(slotTimes));
     updateHeuteMode();
@@ -72,26 +74,33 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-open-task-modal').addEventListener('click', () => openModal('modal-task'));
   document.getElementById('btn-open-exam-modal').addEventListener('click', () => openModal('modal-exam'));
 
-  // Umschalten Unterricht vs. Pause
+  // Umschalten Unterricht vs. Pause im Formular
   const typeSelect = document.getElementById('sched-type');
   const fieldsLesson = document.getElementById('fields-lesson');
   const fieldsPause = document.getElementById('fields-pause');
+  const wrapperLessonSlot = document.getElementById('wrapper-lesson-slot');
+  const wrapperPauseAfter = document.getElementById('wrapper-pause-after');
+  const durationInput = document.getElementById('sched-duration');
 
   typeSelect.addEventListener('change', () => {
     if (typeSelect.value === 'pause') {
       fieldsLesson.style.display = 'none';
       fieldsPause.style.display = 'block';
+      wrapperLessonSlot.style.display = 'none';
+      wrapperPauseAfter.style.display = 'block';
+      durationInput.value = '5'; // Standardwert für kleine Pause
     } else {
       fieldsLesson.style.display = 'block';
       fieldsPause.style.display = 'none';
+      wrapperLessonSlot.style.display = 'block';
+      wrapperPauseAfter.style.display = 'none';
+      durationInput.value = '45'; // Standardwert für Schulstunde
     }
   });
 
-  // Automatisches Einfüllen der gemerkten Uhrzeit beim Slot-Wechsel
   const slotSelect = document.getElementById('sched-slot');
   const startHH = document.getElementById('sched-start-hh');
   const startMM = document.getElementById('sched-start-mm');
-  const durationInput = document.getElementById('sched-duration');
 
   function fillModalSlotData() {
     const slot = slotSelect.value;
@@ -104,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   slotSelect.addEventListener('change', fillModalSlotData);
 
-  // Hilfsfunktion: Endzeit berechnen
   function calcEndTime(hh, mm, durationMinutes) {
     let startMins = parseInt(hh) * 60 + parseInt(mm);
     let endMins = startMins + parseInt(durationMinutes);
@@ -123,48 +131,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayStr = daysMap[now.getDay()];
     const currentTimeStr = now.toTimeString().substring(0, 5);
 
-    const todayLessons = schedule.filter(s => s.day === todayStr || s.type === 'pause')
-                                 .sort((a,b) => (a.start || '').localeCompare(b.start || ''));
+    // Unterricht + Pausen zusammenführen
+    let todayEvents = [
+      ...schedule.filter(s => s.day === todayStr).map(s => ({ ...s, isPause: false })),
+      ...pauses.map(p => ({ ...p, isPause: true }))
+    ].sort((a,b) => (a.start || '').localeCompare(b.start || ''));
 
     const currentElem = document.getElementById('current-subject');
     const detailsElem = document.getElementById('current-details');
     const nextElem = document.getElementById('next-subject');
 
-    if (todayLessons.length === 0) {
+    if (todayEvents.length === 0) {
       currentElem.innerText = 'Frei 🎉';
       detailsElem.innerText = 'Keine Stunden für heute eingetragen';
       nextElem.innerText = '-';
       return;
     }
 
-    let currentLesson = null;
-    let nextLesson = null;
+    let currentEvent = null;
+    let nextEvent = null;
 
-    for (let i = 0; i < todayLessons.length; i++) {
-      const lesson = todayLessons[i];
-      if (currentTimeStr >= lesson.start && currentTimeStr <= lesson.end) {
-        currentLesson = lesson;
-        nextLesson = todayLessons[i + 1] || null;
+    for (let i = 0; i < todayEvents.length; i++) {
+      const ev = todayEvents[i];
+      if (currentTimeStr >= ev.start && currentTimeStr <= ev.end) {
+        currentEvent = ev;
+        nextEvent = todayEvents[i + 1] || null;
         break;
-      } else if (currentTimeStr < lesson.start) {
-        nextLesson = lesson;
+      } else if (currentTimeStr < ev.start) {
+        nextEvent = ev;
         break;
       }
     }
 
-    if (currentLesson) {
-      if (currentLesson.type === 'pause') {
-        currentElem.innerText = `☕ ${currentLesson.subject || 'Pause'}`;
-        detailsElem.innerText = `Pause bis ${currentLesson.end} Uhr`;
+    if (currentEvent) {
+      if (currentEvent.isPause) {
+        currentElem.innerText = `☕ ${currentEvent.subject || 'Pause'}`;
+        detailsElem.innerText = `Pause bis ${currentEvent.end} Uhr`;
       } else {
-        currentElem.innerText = `🧮 ${currentLesson.subject}`;
-        detailsElem.innerText = `Raum ${currentLesson.room || '-'} · ${currentLesson.teacher || '-'}`;
+        currentElem.innerText = `🧮 ${currentEvent.subject}`;
+        detailsElem.innerText = `Raum ${currentEvent.room || '-'} · ${currentEvent.teacher || '-'}`;
       }
-      nextElem.innerText = nextLesson ? `Danach: ${nextLesson.subject}` : 'Danach: Schulschluss 🎉';
-    } else if (nextLesson) {
+      nextElem.innerText = nextEvent ? `Danach: ${nextEvent.subject}` : 'Danach: Schulschluss 🎉';
+    } else if (nextEvent) {
       currentElem.innerText = '☕ Pause / Warten';
-      detailsElem.innerText = `Nächste Stunde ab ${nextLesson.start} Uhr`;
-      nextElem.innerText = `Danach: ${nextLesson.subject}`;
+      detailsElem.innerText = `Nächster Punkt ab ${nextEvent.start} Uhr`;
+      nextElem.innerText = `Danach: ${nextEvent.subject}`;
     } else {
       currentElem.innerText = '🏠 Feierabend';
       detailsElem.innerText = 'Der Unterricht für heute ist beendet';
@@ -172,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // STUNDENPLAN (Klassische Tabelle)
+  // STUNDENPLAN TABELLE RENDERN
   function renderSchedule() {
     const tbody = document.getElementById('schedule-table-body');
     tbody.innerHTML = '';
@@ -181,9 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalSlots = 10;
 
     for (let slot = 1; slot <= totalSlots; slot++) {
-      const tr = document.createElement('tr');
-
-      // Uhrzeit für diesen Slot ermitteln
+      // 1. UNTERRICHTSZEILE (z.B. 1. Stunde)
+      const trLesson = document.createElement('tr');
       const st = slotTimes[slot];
       let timeInfo = 'Zeit ?';
       if (st && st.hh && st.mm && st.duration) {
@@ -194,44 +204,43 @@ document.addEventListener('DOMContentLoaded', () => {
         timeInfo = `${startStr} - ${endStr}`;
       }
 
-      // Prüfen ob dieser Slot eine Pause für alle Tage ist
-      const pauseEntry = schedule.find(s => parseInt(s.slot) === slot && s.type === 'pause');
+      let rowHtml = `<td class="time-cell"><strong>${slot}. Std</strong><br><small>${timeInfo}</small></td>`;
 
-      if (pauseEntry) {
-        tr.className = 'pause-row';
-        tr.innerHTML = `
-          <td class="time-cell"><strong>Pause</strong><br><small>${timeInfo}</small></td>
+      days.forEach(day => {
+        const entry = schedule.find(s => parseInt(s.slot) === slot && s.day === day);
+        if (entry) {
+          rowHtml += `
+            <td>
+              <div class="cell-content">
+                <span class="cell-subject">${entry.subject}</span>
+                <span class="cell-info">R: ${entry.room || '-'}</span>
+                <span class="cell-info">${entry.teacher || '-'}</span>
+                <button class="cell-delete" onclick="deleteSchedule(${entry.id})">🗑️</button>
+              </div>
+            </td>
+          `;
+        } else {
+          rowHtml += `<td>-</td>`;
+        }
+      });
+
+      trLesson.innerHTML = rowHtml;
+      tbody.appendChild(trLesson);
+
+      // 2. PRÜFEN OB NACH DIESER STUNDE EINE PAUSE EINTRAGETEN IST
+      const pauseAfter = pauses.find(p => parseInt(p.afterSlot) === slot);
+      if (pauseAfter) {
+        const trPause = document.createElement('tr');
+        trPause.className = 'pause-row';
+        trPause.innerHTML = `
+          <td class="time-cell"><strong>Pause</strong><br><small>${pauseAfter.start} - ${pauseAfter.end}</small></td>
           <td colspan="5" class="pause-cell">
-            ☕ ${pauseEntry.subject || 'Pause'} (${pauseEntry.duration} Min)
-            <button class="cell-delete" onclick="deleteSchedule(${pauseEntry.id})">🗑️</button>
+            ☕ ${pauseAfter.subject || 'Pause'} (${pauseAfter.duration} Min)
+            <button class="cell-delete" onclick="deletePause(${pauseAfter.id})">🗑️</button>
           </td>
         `;
-      } else {
-        let rowHtml = `<td class="time-cell"><strong>${slot}. Std</strong><br><small>${timeInfo}</small></td>`;
-
-        days.forEach(day => {
-          const entry = schedule.find(s => parseInt(s.slot) === slot && s.day === day);
-
-          if (entry) {
-            rowHtml += `
-              <td>
-                <div class="cell-content">
-                  <span class="cell-subject">${entry.subject}</span>
-                  <span class="cell-info">R: ${entry.room || '-'}</span>
-                  <span class="cell-info">${entry.teacher || '-'}</span>
-                  <button class="cell-delete" onclick="deleteSchedule(${entry.id})">🗑️</button>
-                </div>
-              </td>
-            `;
-          } else {
-            rowHtml += `<td>-</td>`;
-          }
-        });
-
-        tr.innerHTML = rowHtml;
+        tbody.appendChild(trPause);
       }
-
-      tbody.appendChild(tr);
     }
   }
 
@@ -241,13 +250,16 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSchedule();
   };
 
+  window.deletePause = function(id) {
+    pauses = pauses.filter(p => p.id !== id);
+    saveAll();
+    renderSchedule();
+  };
+
   document.getElementById('form-schedule').addEventListener('submit', (e) => {
     e.preventDefault();
 
     const type = document.getElementById('sched-type').value;
-    const slot = document.getElementById('sched-slot').value;
-    const day = document.getElementById('sched-day').value;
-    
     const hh = String(document.getElementById('sched-start-hh').value).padStart(2, '0');
     const mm = String(document.getElementById('sched-start-mm').value).padStart(2, '0');
     const duration = document.getElementById('sched-duration').value;
@@ -255,28 +267,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const startStr = `${hh}:${mm}`;
     const endStr = calcEndTime(hh, mm, duration);
 
-    // 1. Uhrzeiten für diesen Slot speichern (gilt für alle Tage!)
-    slotTimes[slot] = { hh, mm, duration };
-
-    // 2. Bestehenden Eintrag überschreiben
     if (type === 'pause') {
-      // Pause gilt für den ganzen Slot
-      schedule = schedule.filter(s => parseInt(s.slot) !== parseInt(slot));
-      schedule.push({
+      const afterSlot = document.getElementById('sched-pause-after').value;
+      
+      // Vorherige Pause nach dieser Stunde ersetzen
+      pauses = pauses.filter(p => parseInt(p.afterSlot) !== parseInt(afterSlot));
+      pauses.push({
         id: Date.now(),
-        type: 'pause',
-        slot,
+        afterSlot,
         start: startStr,
         end: endStr,
         duration,
         subject: document.getElementById('sched-pause-name').value || 'Pause'
       });
+
     } else {
-      // Normaler Unterricht für einen Wochentag
+      const slot = document.getElementById('sched-slot').value;
+      const day = document.getElementById('sched-day').value;
+
+      // Zeiten für diesen Slot speichern (gilt für alle Tage für diese Stunde)
+      slotTimes[slot] = { hh, mm, duration };
+
+      // Unterricht eintragen/ersetzen
       schedule = schedule.filter(s => !(parseInt(s.slot) === parseInt(slot) && s.day === day));
       schedule.push({
         id: Date.now(),
-        type: 'lesson',
         slot,
         day,
         start: startStr,
@@ -294,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.target.reset();
   });
 
-  // ARBEITEN & Countdown
+  // ARBEITEN
   function renderExams() {
     const container = document.getElementById('exam-list');
     container.innerHTML = '';
@@ -305,7 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     exams.sort((a,b) => a.date.localeCompare(b.date));
-
     const today = new Date().toISOString().split('T')[0];
 
     exams.forEach(ex => {
@@ -500,5 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderExams();
   updateHeuteMode();
 });
+
 
 
