@@ -27,6 +27,17 @@ body {
   align-items: center; 
 }
 
+.version-badge {
+  font-size: 0.75rem;
+  background: #e2e8f0;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
 .date-badge { 
   font-size: 0.85rem; 
   color: var(--text-muted); 
@@ -79,7 +90,7 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
   gap: 8px; 
 }
 
-.task-item, .exam-item { 
+.task-item { 
   background: var(--card-bg); 
   padding: 12px; 
   border-radius: 10px; 
@@ -94,6 +105,69 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
   font-weight: bold;
   color: var(--primary);
   margin-top: 0.5rem;
+}
+
+/* Modals */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.modal-backdrop.active {
+  display: flex;
+}
+
+.modal-card {
+  display: none;
+  background: var(--card-bg);
+  width: 100%;
+  max-width: 450px;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.modal-card.active {
+  display: block;
+}
+
+form label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  margin-bottom: 0.3rem;
+  color: var(--text-muted);
+}
+
+form input, form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f8fafc;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+.row > div { flex: 1; }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 1.5rem;
 }
 
 /* Bottom Nav */
@@ -133,4 +207,14 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
   border-radius: 8px; 
   font-weight: bold; 
   cursor: pointer; 
+}
+
+.btn-secondary {
+  background: var(--border);
+  color: var(--text);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
 }

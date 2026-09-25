@@ -12,7 +12,10 @@
 
   <!-- Header -->
   <header class="app-header">
-    <h1 id="header-title">Heute</h1>
+    <div>
+      <h1 id="header-title">Heute</h1>
+      <span id="app-version" class="version-badge">v4.0</span>
+    </div>
     <span id="header-date" class="date-badge"></span>
   </header>
 
@@ -23,8 +26,9 @@
     <section id="tab-heute" class="tab-content active">
       <div class="card status-card">
         <span class="status-tag" id="status-tag">Status</span>
-        <h2 id="current-subject">Willkommen!</h2>
-        <p id="current-details">Trage deine ersten Fächer & Aufgaben ein.</p>
+        <h2 id="current-subject">Lade Status...</h2>
+        <p id="current-details">-</p>
+        <p class="next-up" id="next-subject">-</p>
       </div>
 
       <h3>📝 Heute erledigen</h3>
@@ -35,7 +39,7 @@
     <section id="tab-stundenplan" class="tab-content">
       <div class="section-header">
         <h2>Stundenplan</h2>
-        <button class="btn-primary" id="btn-add-schedule">+ Stunde</button>
+        <button class="btn-primary" id="btn-open-schedule-modal">+ Stunde</button>
       </div>
       <div id="schedule-list" class="task-list"></div>
     </section>
@@ -44,7 +48,7 @@
     <section id="tab-aufgaben" class="tab-content">
       <div class="section-header">
         <h2>Aufgaben</h2>
-        <button class="btn-primary" id="btn-add-task">+ Aufgabe</button>
+        <button class="btn-primary" id="btn-open-task-modal">+ Aufgabe</button>
       </div>
       <div id="all-tasks" class="task-list"></div>
     </section>
@@ -53,7 +57,7 @@
     <section id="tab-arbeiten" class="tab-content">
       <div class="section-header">
         <h2>Anstehende Arbeiten</h2>
-        <button class="btn-primary" id="btn-add-exam">+ Arbeit</button>
+        <button class="btn-primary" id="btn-open-exam-modal">+ Arbeit</button>
       </div>
       <div id="exam-list" class="exam-list"></div>
     </section>
@@ -62,7 +66,7 @@
     <section id="tab-noten" class="tab-content">
       <div class="section-header">
         <h2>Notenübersicht</h2>
-        <button class="btn-primary" id="btn-add-grade">+ Note</button>
+        <button class="btn-primary" id="btn-open-grade-modal">+ Note</button>
       </div>
       <div class="card">
         <h3>Gesamtschnitt</h3>
@@ -73,6 +77,106 @@
     </section>
 
   </main>
+
+  <!-- MODALS (Popups) -->
+  <div id="modal-backdrop" class="modal-backdrop">
+    
+    <!-- Modal: Stunde hinzufügen -->
+    <div id="modal-schedule" class="modal-card">
+      <h3>Stunde hinzufügen</h3>
+      <form id="form-schedule">
+        <label>Wochentag</label>
+        <select id="sched-day" required>
+          <option value="Mo">Montag</option>
+          <option value="Di">Dienstag</option>
+          <option value="Mi">Mittwoch</option>
+          <option value="Do">Donnerstag</option>
+          <option value="Fr">Freitag</option>
+        </select>
+
+        <label>Fach</label>
+        <input type="text" id="sched-subject" placeholder="z. B. Mathematik" required>
+
+        <label>Lehrer</label>
+        <input type="text" id="sched-teacher" placeholder="z. B. Fr. Schmidt">
+
+        <label>Raum</label>
+        <input type="text" id="sched-room" placeholder="z. B. 204">
+
+        <div class="row">
+          <div>
+            <label>Startzeit</label>
+            <input type="time" id="sched-start" required>
+          </div>
+          <div>
+            <label>Endzeit</label>
+            <input type="time" id="sched-end" required>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
+          <button type="submit" class="btn-primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal: Note hinzufügen -->
+    <div id="modal-grade" class="modal-card">
+      <h3>Note eintragen</h3>
+      <form id="form-grade">
+        <label>Fach</label>
+        <input type="text" id="grade-subject" placeholder="z. B. Deutsch" required>
+
+        <label>Note (1+ bis 6)</label>
+        <select id="grade-value" required>
+          <option value="1+">1+</option>
+          <option value="1">1</option>
+          <option value="1-">1-</option>
+          <option value="2+">2+</option>
+          <option value="2" selected>2</option>
+          <option value="2-">2-</option>
+          <option value="3+">3+</option>
+          <option value="3">3</option>
+          <option value="3-">3-</option>
+          <option value="4+">4+</option>
+          <option value="4">4</option>
+          <option value="4-">4-</option>
+          <option value="5+">5+</option>
+          <option value="5">5</option>
+          <option value="5-">5-</option>
+          <option value="6">6</option>
+        </select>
+
+        <label>Art der Leistung</label>
+        <select id="grade-type">
+          <option value="Schriftlich">Schriftlich (z. B. Klausur)</option>
+          <option value="Mündlich">Mündlich / Mitarbeit</option>
+          <option value="Test">Kurztest</option>
+        </select>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
+          <button type="submit" class="btn-primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal: Aufgabe hinzufügen -->
+    <div id="modal-task" class="modal-card">
+      <h3>Aufgabe hinzufügen</h3>
+      <form id="form-task">
+        <label>Beschreibung</label>
+        <input type="text" id="task-title" placeholder="z. B. Mathe S. 84 Nr. 3–6" required>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
+          <button type="submit" class="btn-primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav">
