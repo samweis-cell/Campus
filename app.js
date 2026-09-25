@@ -1,13 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Versions-Anzeige für die Entwicklung
-  const APP_VERSION = 'v4.0';
+  const APP_VERSION = 'v5.0';
   const versionElem = document.getElementById('app-version');
-  if (versionElem) {
-    versionElem.innerText = APP_VERSION;
-  }
+  if (versionElem) versionElem.innerText = APP_VERSION;
 
-  // Datum oben anzeigen
   const dateElem = document.getElementById('header-date');
   if (dateElem) {
     dateElem.innerText = new Date().toLocaleDateString('de-DE', { 
@@ -15,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Noten-Mapping für den exakten Schnitt
   const gradePoints = {
     '1+': 1.0, '1': 1.0, '1-': 1.3,
     '2+': 1.7, '2': 2.0, '2-': 2.3,
@@ -44,15 +39,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let tasks = JSON.parse(localStorage.getItem('pwa_tasks')) || [];
   let grades = JSON.parse(localStorage.getItem('pwa_grades')) || [];
   let schedule = JSON.parse(localStorage.getItem('pwa_schedule')) || [];
+  let exams = JSON.parse(localStorage.getItem('pwa_exams')) || [];
 
   function saveAll() {
     localStorage.setItem('pwa_tasks', JSON.stringify(tasks));
     localStorage.setItem('pwa_grades', JSON.stringify(grades));
     localStorage.setItem('pwa_schedule', JSON.stringify(schedule));
+    localStorage.setItem('pwa_exams', JSON.stringify(exams));
     updateHeuteMode();
   }
 
-  // --- MODAL MANAGEMENT ---
+  // Modals
   const backdrop = document.getElementById('modal-backdrop');
 
   window.closeModal = function() {
@@ -68,13 +65,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-open-schedule-modal').addEventListener('click', () => openModal('modal-schedule'));
   document.getElementById('btn-open-grade-modal').addEventListener('click', () => openModal('modal-grade'));
   document.getElementById('btn-open-task-modal').addEventListener('click', () => openModal('modal-task'));
+  document.getElementById('btn-open-exam-modal').addEventListener('click', () => openModal('modal-exam'));
 
-  // --- HEUTE MODUS ---
+  // HEUTE MODUS
   function updateHeuteMode() {
     const now = new Date();
     const daysMap = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
     const todayStr = daysMap[now.getDay()];
-    const currentTimeStr = now.toTimeString().substring(0, 5); // "HH:MM"
+    const currentTimeStr = now.toTimeString().substring(0, 5);
 
     const todayLessons = schedule.filter(s => s.day === todayStr)
                                  .sort((a,b) => a.start.localeCompare(b.start));
@@ -107,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (currentLesson) {
       currentElem.innerText = `🧮 ${currentLesson.subject}`;
-      detailsElem.innerText = `Raum ${currentLesson.room || '-'} · Fr/Hr ${currentLesson.teacher || '-'}`;
+      detailsElem.innerText = `Raum ${currentLesson.room || '-'} · ${currentLesson.teacher || '-'}`;
       nextElem.innerText = nextLesson ? `Danach: ${nextLesson.subject} (${nextLesson.room || '-'})` : 'Danach: Schulschluss 🎉';
     } else if (nextLesson) {
       currentElem.innerText = '☕ Pause / Warten';
@@ -120,38 +118,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- STUNDENPLAN ---
+  // STUNDENPLAN (Wochenansicht)
   function renderSchedule() {
-    const container = document.getElementById('schedule-list');
+    const container = document.getElementById('schedule-week-grid');
     container.innerHTML = '';
 
-    if (schedule.length === 0) {
-      container.innerHTML = '<p style="color: gray;">Keine Stunden eingetragen.</p>';
-      return;
-    }
+    const days = [
+      { id: 'Mo', name: 'Montag' },
+      { id: 'Di', name: 'Dienstag' },
+      { id: 'Mi', name: 'Mittwoch' },
+      { id: 'Do', name: 'Donnerstag' },
+      { id: 'Fr', name: 'Freitag' }
+    ];
 
-    schedule.sort((a,b) => a.start.localeCompare(b.start));
+    days.forEach(dayObj => {
+      const dayLessons = schedule.filter(s => s.day === dayObj.id).sort((a,b) => a.start.localeCompare(b.start));
+      
+      const dayCol = document.createElement('div');
+      dayCol.className = 'day-column';
+      
+      let html = `<div class="day-title">${dayObj.name}</div>`;
+      if (dayLessons.length === 0) {
+        html += `<p style="color: gray; font-size: 0.85rem;">Kein Unterricht</p>`;
+      } else {
+        dayLessons.forEach(s => {
+          html += `
+            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+              <span><strong>${s.start}-${s.end}</strong> ${s.subject}</span>
+              <small style="color:var(--text-muted)">R: ${s.room || '-'} | ${s.teacher || '-'}</small>
+              <button onclick="deleteSchedule(${s.id})" style="border:none; background:none; color:red; margin-left: 5px;">🗑️</button>
+            </div>
+          `;
+        });
+      }
 
-    schedule.forEach(s => {
-      const item = document.createElement('div');
-      item.className = 'task-item';
-      item.innerHTML = `
-        <div>
-          <strong>[${s.day}] ${s.start} - ${s.end} Uhr: ${s.subject}</strong><br>
-          <small>Raum: ${s.room || '-'} | Lehrer: ${s.teacher || '-'}</small>
-        </div>
-        <button style="margin-left:auto; border:none; background:none; color:red;">🗑️</button>
-      `;
-
-      item.querySelector('button').addEventListener('click', () => {
-        schedule = schedule.filter(i => i.id !== s.id);
-        saveAll();
-        renderSchedule();
-      });
-
-      container.appendChild(item);
+      dayCol.innerHTML = html;
+      container.appendChild(dayCol);
     });
   }
+
+  window.deleteSchedule = function(id) {
+    schedule = schedule.filter(s => s.id !== id);
+    saveAll();
+    renderSchedule();
+  };
 
   document.getElementById('form-schedule').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -170,7 +180,62 @@ document.addEventListener('DOMContentLoaded', () => {
     e.target.reset();
   });
 
-  // --- NOTEN ---
+  // ARBEITEN & Countdown
+  function renderExams() {
+    const container = document.getElementById('exam-list');
+    container.innerHTML = '';
+
+    if (exams.length === 0) {
+      container.innerHTML = '<p style="color: gray;">Keine anstehenden Arbeiten eingetragen.</p>';
+      return;
+    }
+
+    exams.sort((a,b) => a.date.localeCompare(b.date));
+
+    const today = new Date().toISOString().split('T')[0];
+
+    exams.forEach(ex => {
+      const examDate = new Date(ex.date);
+      const diffTime = examDate - new Date(today);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      let badgeText = diffDays === 0 ? 'Heute!' : (diffDays > 0 ? `In ${diffDays} Tag(en)` : 'Vorbei');
+
+      const item = document.createElement('div');
+      item.className = 'task-item';
+      item.innerHTML = `
+        <div>
+          <strong>${ex.subject}</strong> <span class="days-tag">${badgeText}</span><br>
+          <small>Datum: ${new Date(ex.date).toLocaleDateString('de-DE')} | ${ex.topic || 'Kein Thema angegeben'}</small>
+        </div>
+        <button style="margin-left:auto; border:none; background:none; color:red;">🗑️</button>
+      `;
+
+      item.querySelector('button').addEventListener('click', () => {
+        exams = exams.filter(i => i.id !== ex.id);
+        saveAll();
+        renderExams();
+      });
+
+      container.appendChild(item);
+    });
+  }
+
+  document.getElementById('form-exam').addEventListener('submit', (e) => {
+    e.preventDefault();
+    exams.push({
+      id: Date.now(),
+      subject: document.getElementById('exam-subject').value,
+      date: document.getElementById('exam-date').value,
+      topic: document.getElementById('exam-topic').value
+    });
+    saveAll();
+    renderExams();
+    closeModal();
+    e.target.reset();
+  });
+
+  // NOTEN & SIMULATOR
   function renderGrades() {
     const container = document.getElementById('grades-list');
     const avgElement = document.getElementById('grade-average');
@@ -182,12 +247,18 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    let totalSum = 0;
+    let totalPoints = 0;
+    let totalWeight = 0;
+
     grades.forEach(g => {
-      totalSum += gradePoints[g.value] || 2.0;
+      const p = gradePoints[g.value] || 2.0;
+      const w = parseFloat(g.weight || 0.5);
+      totalPoints += p * w;
+      totalWeight += w;
     });
 
-    avgElement.innerText = (totalSum / grades.length).toFixed(2);
+    const avg = (totalPoints / totalWeight).toFixed(2);
+    avgElement.innerText = avg;
 
     grades.forEach(g => {
       const item = document.createElement('div');
@@ -195,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
       item.innerHTML = `
         <div>
           <strong>${g.subject}:</strong> Note ${g.value}
-          <br><small>${g.type}</small>
+          <br><small>Gewichtung: ${g.weight * 100}%</small>
         </div>
         <button style="margin-left:auto; border:none; background:none; color:red;">🗑️</button>
       `;
@@ -210,13 +281,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  document.getElementById('btn-calc-sim').addEventListener('click', () => {
+    const targetAvg = parseFloat(document.getElementById('sim-target').value);
+    const resultElem = document.getElementById('sim-result');
+
+    if (!targetAvg || grades.length === 0) {
+      resultElem.innerText = 'Trage erst Noten und einen Wunschschnitt ein!';
+      return;
+    }
+
+    let totalPoints = 0;
+    let totalWeight = 0;
+
+    grades.forEach(g => {
+      const p = gradePoints[g.value] || 2.0;
+      const w = parseFloat(g.weight || 0.5);
+      totalPoints += p * w;
+      totalWeight += w;
+    });
+
+    // Angenommen die nächste Arbeit zählt z. B. Gewicht 0.5
+    const nextWeight = 0.5;
+    const requiredGrade = ((targetAvg * (totalWeight + nextWeight)) - totalPoints) / nextWeight;
+
+    if (requiredGrade < 1.0) {
+      resultElem.innerText = `Super! Du kannst sogar eine 1.0 schreiben und erreichst dein Ziel.`;
+    } else if (requiredGrade > 6.0) {
+      resultElem.innerText = `Das Ziel ist rechnerisch leider nicht mehr möglich.`;
+    } else {
+      resultElem.innerText = `Du brauchst mindestens eine ${requiredGrade.toFixed(1)} in der nächsten Arbeit.`;
+    }
+  });
+
   document.getElementById('form-grade').addEventListener('submit', (e) => {
     e.preventDefault();
     grades.push({
       id: Date.now(),
       subject: document.getElementById('grade-subject').value,
       value: document.getElementById('grade-value').value,
-      type: document.getElementById('grade-type').value
+      weight: document.getElementById('grade-weight').value
     });
     saveAll();
     renderGrades();
@@ -224,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.target.reset();
   });
 
-  // --- AUFGABEN ---
+  // AUFGABEN
   function renderTasks() {
     const heuteContainer = document.getElementById('heute-tasks');
     const allContainer = document.getElementById('all-tasks');
@@ -277,9 +380,10 @@ document.addEventListener('DOMContentLoaded', () => {
     e.target.reset();
   });
 
-  // Initial laden
+  // Initialisierung
   renderTasks();
   renderGrades();
   renderSchedule();
+  renderExams();
   updateHeuteMode();
 });

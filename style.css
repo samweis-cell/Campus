@@ -7,6 +7,16 @@
   --border: #e2e8f0;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+  }
+}
+
 * { 
   box-sizing: border-box; 
   margin: 0; 
@@ -29,7 +39,7 @@ body {
 
 .version-badge {
   font-size: 0.75rem;
-  background: #e2e8f0;
+  background: var(--border);
   color: var(--text-muted);
   padding: 2px 6px;
   border-radius: 4px;
@@ -73,7 +83,7 @@ body {
 
 .status-tag { 
   display: inline-block; 
-  background: #e0e7ff; 
+  background: rgba(79, 70, 229, 0.15); 
   color: var(--primary); 
   font-size: 0.75rem; 
   font-weight: bold; 
@@ -83,8 +93,9 @@ body {
 }
 
 h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
+.sub-text { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem; }
 
-.task-list, .pack-list, .exam-list { 
+.task-list { 
   display: flex; 
   flex-direction: column; 
   gap: 8px; 
@@ -107,12 +118,51 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
   margin-top: 0.5rem;
 }
 
+.sim-result-text {
+  margin-top: 10px;
+  font-weight: bold;
+  color: var(--primary);
+}
+
+/* Wochenraster Stundenplan */
+.week-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.day-column {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.day-title {
+  font-size: 1rem;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+
+/* Countdown Tag */
+.days-tag {
+  background: var(--primary);
+  color: white;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
 /* Modals */
 .modal-backdrop {
   display: none;
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(4px);
   z-index: 200;
   justify-content: center;
@@ -120,9 +170,7 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
   padding: 1rem;
 }
 
-.modal-backdrop.active {
-  display: flex;
-}
+.modal-backdrop.active { display: flex; }
 
 .modal-card {
   display: none;
@@ -131,12 +179,10 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
   max-width: 450px;
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-.modal-card.active {
-  display: block;
-}
+.modal-card.active { display: block; }
 
 form label {
   display: block;
@@ -153,15 +199,12 @@ form input, form select {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
-  background: #f8fafc;
+  background: var(--bg);
+  color: var(--text);
 }
 
-.row {
-  display: flex;
-  gap: 10px;
-}
-
-.row > div { flex: 1; }
+.row { display: flex; gap: 10px; }
+.row > div, .row > input { flex: 1; }
 
 .modal-actions {
   display: flex;
@@ -173,9 +216,7 @@ form input, form select {
 /* Bottom Nav */
 .bottom-nav { 
   position: fixed; 
-  bottom: 0; 
-  left: 0; 
-  right: 0; 
+  bottom: 0; left: 0; right: 0; 
   height: 60px; 
   background: var(--card-bg); 
   border-top: 1px solid var(--border); 

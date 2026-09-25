@@ -14,7 +14,7 @@
   <header class="app-header">
     <div>
       <h1 id="header-title">Heute</h1>
-      <span id="app-version" class="version-badge">v4.0</span>
+      <span id="app-version" class="version-badge">v5.0</span>
     </div>
     <span id="header-date" class="date-badge"></span>
   </header>
@@ -25,7 +25,7 @@
     <!-- Tab 1: HEUTE -->
     <section id="tab-heute" class="tab-content active">
       <div class="card status-card">
-        <span class="status-tag" id="status-tag">Status</span>
+        <span class="status-tag" id="status-tag">Aktueller Status</span>
         <h2 id="current-subject">Lade Status...</h2>
         <p id="current-details">-</p>
         <p class="next-up" id="next-subject">-</p>
@@ -35,13 +35,13 @@
       <div id="heute-tasks" class="task-list"></div>
     </section>
 
-    <!-- Tab 2: STUNDENPLAN -->
+    <!-- Tab 2: STUNDENPLAN (Wochenansicht) -->
     <section id="tab-stundenplan" class="tab-content">
       <div class="section-header">
-        <h2>Stundenplan</h2>
+        <h2>Wochenplan</h2>
         <button class="btn-primary" id="btn-open-schedule-modal">+ Stunde</button>
       </div>
-      <div id="schedule-list" class="task-list"></div>
+      <div id="schedule-week-grid" class="week-grid"></div>
     </section>
 
     <!-- Tab 3: AUFGABEN -->
@@ -59,29 +59,42 @@
         <h2>Anstehende Arbeiten</h2>
         <button class="btn-primary" id="btn-open-exam-modal">+ Arbeit</button>
       </div>
-      <div id="exam-list" class="exam-list"></div>
+      <div id="exam-list" class="task-list"></div>
     </section>
 
-    <!-- Tab 5: NOTEN -->
+    <!-- Tab 5: NOTEN & SIMULATOR -->
     <section id="tab-noten" class="tab-content">
       <div class="section-header">
-        <h2>Notenübersicht</h2>
+        <h2>Noten & Simulator</h2>
         <button class="btn-primary" id="btn-open-grade-modal">+ Note</button>
       </div>
+
       <div class="card">
         <h3>Gesamtschnitt</h3>
         <p class="grade-badge" id="grade-average">-</p>
       </div>
+
+      <!-- Simulator -->
+      <div class="card simulator-card">
+        <h3>🎯 Noten-Simulator</h3>
+        <p class="sub-text">Welche Note brauchst du in der nächsten Arbeit?</p>
+        <div class="row">
+          <input type="number" id="sim-target" placeholder="Wunschschnitt (z.B. 2.0)" step="0.1" min="1" max="6">
+          <button class="btn-secondary" id="btn-calc-sim">Berechnen</button>
+        </div>
+        <p id="sim-result" class="sim-result-text"></p>
+      </div>
+
       <h3>Notenliste</h3>
       <div id="grades-list" class="task-list"></div>
     </section>
 
   </main>
 
-  <!-- MODALS (Popups) -->
+  <!-- MODALS -->
   <div id="modal-backdrop" class="modal-backdrop">
     
-    <!-- Modal: Stunde hinzufügen -->
+    <!-- Modal: Stunde -->
     <div id="modal-schedule" class="modal-card">
       <h3>Stunde hinzufügen</h3>
       <form id="form-schedule">
@@ -121,7 +134,7 @@
       </form>
     </div>
 
-    <!-- Modal: Note hinzufügen -->
+    <!-- Modal: Note -->
     <div id="modal-grade" class="modal-card">
       <h3>Note eintragen</h3>
       <form id="form-grade">
@@ -148,11 +161,11 @@
           <option value="6">6</option>
         </select>
 
-        <label>Art der Leistung</label>
-        <select id="grade-type">
-          <option value="Schriftlich">Schriftlich (z. B. Klausur)</option>
-          <option value="Mündlich">Mündlich / Mitarbeit</option>
-          <option value="Test">Kurztest</option>
+        <label>Gewichtung</label>
+        <select id="grade-weight">
+          <option value="0.6">Schriftlich (60%)</option>
+          <option value="0.4">Mündlich / Mitarbeit (40%)</option>
+          <option value="0.2">Kurztest (20%)</option>
         </select>
 
         <div class="modal-actions">
@@ -162,7 +175,27 @@
       </form>
     </div>
 
-    <!-- Modal: Aufgabe hinzufügen -->
+    <!-- Modal: Arbeit/Klausur -->
+    <div id="modal-exam" class="modal-card">
+      <h3>Arbeit eintragen</h3>
+      <form id="form-exam">
+        <label>Fach</label>
+        <input type="text" id="exam-subject" placeholder="z. B. Physik" required>
+
+        <label>Datum</label>
+        <input type="date" id="exam-date" required>
+
+        <label>Thema / Notizen</label>
+        <input type="text" id="exam-topic" placeholder="z. B. Kapitel 3 & 4">
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
+          <button type="submit" class="btn-primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal: Aufgabe -->
     <div id="modal-task" class="modal-card">
       <h3>Aufgabe hinzufügen</h3>
       <form id="form-task">
@@ -178,7 +211,7 @@
 
   </div>
 
-  <!-- Bottom Navigation -->
+  <!-- Bottom Nav -->
   <nav class="bottom-nav">
     <button class="nav-btn active" data-tab="heute">🏠<span>Heute</span></button>
     <button class="nav-btn" data-tab="stundenplan">📅<span>Plan</span></button>
