@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const APP_VERSION = 'v8.0';
+  const APP_VERSION = 'v8.1';
   const versionElem = document.getElementById('app-version');
   if (versionElem) versionElem.innerText = APP_VERSION;
 
@@ -66,14 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(modalId).classList.add('active');
   }
 
-  document.getElementById('btn-open-schedule-modal').addEventListener('click', () => {
-    fillModalSlotData();
-    openModal('modal-schedule');
-  });
-  document.getElementById('btn-open-grade-modal').addEventListener('click', () => openModal('modal-grade'));
-  document.getElementById('btn-open-task-modal').addEventListener('click', () => openModal('modal-task'));
-  document.getElementById('btn-open-exam-modal').addEventListener('click', () => openModal('modal-exam'));
-
   // Umschalten Unterricht vs. Pause im Formular
   const typeSelect = document.getElementById('sched-type');
   const fieldsLesson = document.getElementById('fields-lesson');
@@ -81,26 +73,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const wrapperLessonSlot = document.getElementById('wrapper-lesson-slot');
   const wrapperPauseAfter = document.getElementById('wrapper-pause-after');
   const durationInput = document.getElementById('sched-duration');
+  const slotSelect = document.getElementById('sched-slot');
+  const startHH = document.getElementById('sched-start-hh');
+  const startMM = document.getElementById('sched-start-mm');
 
-  typeSelect.addEventListener('change', () => {
+  function updateTypeVisibility() {
     if (typeSelect.value === 'pause') {
       fieldsLesson.style.display = 'none';
       fieldsPause.style.display = 'block';
       wrapperLessonSlot.style.display = 'none';
       wrapperPauseAfter.style.display = 'block';
-      durationInput.value = '5'; // Standardwert für kleine Pause
     } else {
       fieldsLesson.style.display = 'block';
       fieldsPause.style.display = 'none';
       wrapperLessonSlot.style.display = 'block';
       wrapperPauseAfter.style.display = 'none';
-      durationInput.value = '45'; // Standardwert für Schulstunde
+    }
+  }
+
+  typeSelect.addEventListener('change', () => {
+    updateTypeVisibility();
+    if (typeSelect.value === 'pause') {
+      durationInput.value = '5';
+    } else {
+      durationInput.value = '45';
+      fillModalSlotData();
     }
   });
 
-  const slotSelect = document.getElementById('sched-slot');
-  const startHH = document.getElementById('sched-start-hh');
-  const startMM = document.getElementById('sched-start-mm');
+  document.getElementById('btn-open-schedule-modal').addEventListener('click', () => {
+    document.getElementById('form-schedule').reset();
+    typeSelect.value = 'lesson';
+    updateTypeVisibility();
+    fillModalSlotData();
+    openModal('modal-schedule');
+  });
+
+  document.getElementById('btn-open-grade-modal').addEventListener('click', () => openModal('modal-grade'));
+  document.getElementById('btn-open-task-modal').addEventListener('click', () => openModal('modal-task'));
+  document.getElementById('btn-open-exam-modal').addEventListener('click', () => openModal('modal-exam'));
 
   function fillModalSlotData() {
     const slot = slotSelect.value;
@@ -131,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayStr = daysMap[now.getDay()];
     const currentTimeStr = now.toTimeString().substring(0, 5);
 
-    // Unterricht + Pausen zusammenführen
     let todayEvents = [
       ...schedule.filter(s => s.day === todayStr).map(s => ({ ...s, isPause: false })),
       ...pauses.map(p => ({ ...p, isPause: true }))
@@ -183,6 +193,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // BEARBEITEN-FUNKTIONEN
+  window.editSchedule = function(id) {
+    const entry = schedule.find(s => s.id === id);
+    if (!entry) return;
+
+    typeSelect.value = 'lesson';
+    updateTypeVisibility();
+
+    document.getElementById('sched-slot').value = entry.slot;
+    document.getElementById('sched-day').value = entry.day;
+    document.getElementById('sched-duration').value = entry.duration || '45';
+    document.getElementById('sched-subject').value = entry.subject || '';
+    document.getElementById('sched-teacher').value = entry.teacher || '';
+    document.getElementById('sched-room').value = entry.room || '';
+
+    if (entry.start) {
+      const parts = entry.start.split(':');
+      startHH.value = parts[0] || '';
+      startMM.value = parts[1] || '';
+    }
+
+    openModal('modal-schedule');
+  };
+
+  window.editPause = function(id) {
+    const pauseEntry = pauses.find(p => p.id === id);
+    if (!pauseEntry) return;
+
+    typeSelect.value = 'pause';
+    updateTypeVisibility();
+
+    document.getElementById('sched-pause-after').value = pauseEntry.afterSlot;
+    document.getElementById('sched-duration').value = pauseEntry.duration || '5';
+    document.getElementById('sched-pause-name').value = pauseEntry.subject || '';
+
+    if (pauseEntry.start) {
+      const parts = pauseEntry.start.split(':');
+      startHH.value = parts[0] || '';
+      startMM.value = parts[1] || '';
+    }
+
+    openModal('modal-schedule');
+  };
+
   // STUNDENPLAN TABELLE RENDERN
   function renderSchedule() {
     const tbody = document.getElementById('schedule-table-body');
@@ -192,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalSlots = 10;
 
     for (let slot = 1; slot <= totalSlots; slot++) {
-      // 1. UNTERRICHTSZEILE (z.B. 1. Stunde)
       const trLesson = document.createElement('tr');
       const st = slotTimes[slot];
       let timeInfo = 'Zeit ?';
@@ -210,12 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const entry = schedule.find(s => parseInt(s.slot) === slot && s.day === day);
         if (entry) {
           rowHtml += `
-            <td>
+            <td style="cursor: pointer;" onclick="editSchedule(${entry.id})">
               <div class="cell-content">
                 <span class="cell-subject">${entry.subject}</span>
                 <span class="cell-info">R: ${entry.room || '-'}</span>
                 <span class="cell-info">${entry.teacher || '-'}</span>
-                <button class="cell-delete" onclick="deleteSchedule(${entry.id})">🗑️</button>
+                <button class="cell-delete" onclick="event.stopPropagation(); deleteSchedule(${entry.id})">🗑️</button>
               </div>
             </td>
           `;
@@ -227,16 +280,15 @@ document.addEventListener('DOMContentLoaded', () => {
       trLesson.innerHTML = rowHtml;
       tbody.appendChild(trLesson);
 
-      // 2. PRÜFEN OB NACH DIESER STUNDE EINE PAUSE EINTRAGETEN IST
       const pauseAfter = pauses.find(p => parseInt(p.afterSlot) === slot);
       if (pauseAfter) {
         const trPause = document.createElement('tr');
         trPause.className = 'pause-row';
         trPause.innerHTML = `
           <td class="time-cell"><strong>Pause</strong><br><small>${pauseAfter.start} - ${pauseAfter.end}</small></td>
-          <td colspan="5" class="pause-cell">
+          <td colspan="5" class="pause-cell" style="cursor: pointer;" onclick="editPause(${pauseAfter.id})">
             ☕ ${pauseAfter.subject || 'Pause'} (${pauseAfter.duration} Min)
-            <button class="cell-delete" onclick="deletePause(${pauseAfter.id})">🗑️</button>
+            <button class="cell-delete" onclick="event.stopPropagation(); deletePause(${pauseAfter.id})">🗑️</button>
           </td>
         `;
         tbody.appendChild(trPause);
@@ -270,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (type === 'pause') {
       const afterSlot = document.getElementById('sched-pause-after').value;
       
-      // Vorherige Pause nach dieser Stunde ersetzen
       pauses = pauses.filter(p => parseInt(p.afterSlot) !== parseInt(afterSlot));
       pauses.push({
         id: Date.now(),
@@ -285,10 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const slot = document.getElementById('sched-slot').value;
       const day = document.getElementById('sched-day').value;
 
-      // Zeiten für diesen Slot speichern (gilt für alle Tage für diese Stunde)
       slotTimes[slot] = { hh, mm, duration };
 
-      // Unterricht eintragen/ersetzen
       schedule = schedule.filter(s => !(parseInt(s.slot) === parseInt(slot) && s.day === day));
       schedule.push({
         id: Date.now(),
@@ -514,6 +563,3 @@ document.addEventListener('DOMContentLoaded', () => {
   renderExams();
   updateHeuteMode();
 });
-
-
-
