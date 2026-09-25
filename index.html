@@ -23,31 +23,25 @@
     <section id="tab-heute" class="tab-content active">
       <div class="card status-card">
         <span class="status-tag" id="status-tag">Status</span>
-        <h2 id="current-subject">Lade Stundenplan...</h2>
-        <p id="current-details">-</p>
+        <h2 id="current-subject">Frei</h2>
+        <p id="current-details">Kein Unterricht aktuell</p>
         <p class="next-up" id="next-subject">-</p>
       </div>
 
       <h3>📝 Heute erledigen</h3>
-      <div id="heute-tasks" class="task-list">
-        <!-- Dynamische Aufgaben -->
-      </div>
+      <div id="heute-tasks" class="task-list"></div>
 
       <h3>🎒 Nicht vergessen</h3>
-      <div id="heute-packlist" class="pack-list">
-        <!-- Dynamische Packliste -->
-      </div>
+      <div id="heute-packlist" class="pack-list"></div>
     </section>
 
     <!-- Tab 2: STUNDENPLAN -->
     <section id="tab-stundenplan" class="tab-content">
       <div class="section-header">
         <h2>Stundenplan</h2>
-        <button class="btn-primary" onclick="addSubjectPrompt()">+ Fach</button>
+        <button class="btn-primary" onclick="addScheduleItem()">+ Stunde eintragen</button>
       </div>
-      <div id="schedule-container" class="schedule-grid">
-        <!-- Dynamischer Stundenplan -->
-      </div>
+      <div id="schedule-list" class="task-list"></div>
     </section>
 
     <!-- Tab 3: AUFGABEN -->
@@ -70,11 +64,16 @@
 
     <!-- Tab 5: NOTEN -->
     <section id="tab-noten" class="tab-content">
-      <h2>Notenübersicht</h2>
-      <div class="card">
-        <h3>Aktueller Schnitt</h3>
-        <p class="grade-badge" id="grade-average">0.0</p>
+      <div class="section-header">
+        <h2>Notenübersicht</h2>
+        <button class="btn-primary" onclick="addGradePrompt()">+ Note</button>
       </div>
+      <div class="card">
+        <h3>Gesamtschnitt</h3>
+        <p class="grade-badge" id="grade-average">-</p>
+      </div>
+      <h3>Noten nach Fächern</h3>
+      <div id="grades-list" class="task-list"></div>
     </section>
 
   </main>
