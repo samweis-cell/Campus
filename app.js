@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const APP_VERSION = 'v5.0';
+  const APP_VERSION = 'v6.0';
   const versionElem = document.getElementById('app-version');
   if (versionElem) versionElem.innerText = APP_VERSION;
 
@@ -40,12 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
   let grades = JSON.parse(localStorage.getItem('pwa_grades')) || [];
   let schedule = JSON.parse(localStorage.getItem('pwa_schedule')) || [];
   let exams = JSON.parse(localStorage.getItem('pwa_exams')) || [];
+  // Speichert die Uhrzeiten pro Stundennummer (z.B. { "1": { start: "07:50", end: "08:35" } })
+  let slotTimes = JSON.parse(localStorage.getItem('pwa_slot_times')) || {};
 
   function saveAll() {
     localStorage.setItem('pwa_tasks', JSON.stringify(tasks));
     localStorage.setItem('pwa_grades', JSON.stringify(grades));
     localStorage.setItem('pwa_schedule', JSON.stringify(schedule));
     localStorage.setItem('pwa_exams', JSON.stringify(exams));
+    localStorage.setItem('pwa_slot_times', JSON.stringify(slotTimes));
     updateHeuteMode();
   }
 
@@ -67,6 +70,19 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-open-task-modal').addEventListener('click', () => openModal('modal-task'));
   document.getElementById('btn-open-exam-modal').addEventListener('click', () => openModal('modal-exam'));
 
+  // Formular-Automatik: Wenn Slot im Modal geändert wird, gelernte Uhrzeit eintragen
+  const schedSlotSelect = document.getElementById('sched-slot');
+  const schedStartInput = document.getElementById('sched-start');
+  const schedEndInput = document.getElementById('sched-end');
+
+  schedSlotSelect.addEventListener('change', () => {
+    const selectedSlot = schedSlotSelect.value;
+    if (slotTimes[selectedSlot]) {
+      schedStartInput.value = slotTimes[selectedSlot].start;
+      schedEndInput.value = slotTimes[selectedSlot].end;
+    }
+  });
+
   // HEUTE MODUS
   function updateHeuteMode() {
     const now = new Date();
@@ -75,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentTimeStr = now.toTimeString().substring(0, 5);
 
     const todayLessons = schedule.filter(s => s.day === todayStr)
-                                 .sort((a,b) => a.start.localeCompare(b.start));
+                                 .sort((a,b) => (a.start || '').localeCompare(b.start || ''));
 
     const currentElem = document.getElementById('current-subject');
     const detailsElem = document.getElementById('current-details');
@@ -118,43 +134,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // STUNDENPLAN (Wochenansicht)
+  // STUNDENPLAN (Klassische Tabelle)
   function renderSchedule() {
-    const container = document.getElementById('schedule-week-grid');
-    container.innerHTML = '';
+    const tbody = document.getElementById('schedule-table-body');
+    tbody.innerHTML = '';
 
-    const days = [
-      { id: 'Mo', name: 'Montag' },
-      { id: 'Di', name: 'Dienstag' },
-      { id: 'Mi', name: 'Mittwoch' },
-      { id: 'Do', name: 'Donnerstag' },
-      { id: 'Fr', name: 'Freitag' }
-    ];
+    const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
+    const totalSlots = 8; // 1. bis 8. Stunde
 
-    days.forEach(dayObj => {
-      const dayLessons = schedule.filter(s => s.day === dayObj.id).sort((a,b) => a.start.localeCompare(b.start));
-      
-      const dayCol = document.createElement('div');
-      dayCol.className = 'day-column';
-      
-      let html = `<div class="day-title">${dayObj.name}</div>`;
-      if (dayLessons.length === 0) {
-        html += `<p style="color: gray; font-size: 0.85rem;">Kein Unterricht</p>`;
-      } else {
-        dayLessons.forEach(s => {
-          html += `
-            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
-              <span><strong>${s.start}-${s.end}</strong> ${s.subject}</span>
-              <small style="color:var(--text-muted)">R: ${s.room || '-'} | ${s.teacher || '-'}</small>
-              <button onclick="deleteSchedule(${s.id})" style="border:none; background:none; color:red; margin-left: 5px;">🗑️</button>
-            </div>
+    for (let slot = 1; slot <= totalSlots; slot++) {
+      const tr = document.createElement('tr');
+
+      // Uhrzeit für diesen Slot ermitteln
+      const timeInfo = slotTimes[slot] ? `${slotTimes[slot].start} - ${slotTimes[slot].end}` : 'Zeit ?';
+
+      // 1. Spalte: Slot & Uhrzeit
+      let rowHtml = `<td class="time-cell"><strong>${slot}. Std</strong><br><small>${timeInfo}</small></td>`;
+
+      // 5 Spalten für Mo-Fr
+      days.forEach(day => {
+        const entry = schedule.find(s => parseInt(s.slot) === slot && s.day === day);
+
+        if (entry) {
+          rowHtml += `
+            <td>
+              <div class="cell-content">
+                <span class="cell-subject">${entry.subject}</span>
+                <span class="cell-info">R: ${entry.room || '-'}</span>
+                <span class="cell-info">${entry.teacher || '-'}</span>
+                <button class="cell-delete" onclick="deleteSchedule(${entry.id})">🗑️</button>
+              </div>
+            </td>
           `;
-        });
-      }
+        } else {
+          rowHtml += `<td>-</td>`;
+        }
+      });
 
-      dayCol.innerHTML = html;
-      container.appendChild(dayCol);
-    });
+      tr.innerHTML = rowHtml;
+      tbody.appendChild(tr);
+    }
   }
 
   window.deleteSchedule = function(id) {
@@ -165,15 +184,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('form-schedule').addEventListener('submit', (e) => {
     e.preventDefault();
+
+    const slot = document.getElementById('sched-slot').value;
+    const day = document.getElementById('sched-day').value;
+    const start = document.getElementById('sched-start').value;
+    const end = document.getElementById('sched-end').value;
+
+    // 1. Uhrzeiten für diese Stundennummer global/automatisch speichern
+    slotTimes[slot] = { start, end };
+
+    // 2. Alle bestehenden Einträge derselben Stundennummer auf die neuen Uhrzeiten aktualisieren
+    schedule.forEach(s => {
+      if (s.slot === slot) {
+        s.start = start;
+        s.end = end;
+      }
+    });
+
+    // 3. Vorherigen Eintrag an demselben Tag in demselben Slot ersetzen falls vorhanden
+    schedule = schedule.filter(s => !(s.slot === slot && s.day === day));
+
     schedule.push({
       id: Date.now(),
-      day: document.getElementById('sched-day').value,
+      slot,
+      day,
+      start,
+      end,
       subject: document.getElementById('sched-subject').value,
       teacher: document.getElementById('sched-teacher').value,
-      room: document.getElementById('sched-room').value,
-      start: document.getElementById('sched-start').value,
-      end: document.getElementById('sched-end').value
+      room: document.getElementById('sched-room').value
     });
+
     saveAll();
     renderSchedule();
     closeModal();
@@ -300,7 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
       totalWeight += w;
     });
 
-    // Angenommen die nächste Arbeit zählt z. B. Gewicht 0.5
     const nextWeight = 0.5;
     const requiredGrade = ((targetAvg * (totalWeight + nextWeight)) - totalPoints) / nextWeight;
 
@@ -387,3 +427,4 @@ document.addEventListener('DOMContentLoaded', () => {
   renderExams();
   updateHeuteMode();
 });
+

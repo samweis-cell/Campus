@@ -56,7 +56,7 @@ body {
 
 .content { 
   padding: 1rem; 
-  max-width: 800px; 
+  max-width: 900px; 
   margin: 0 auto; 
 }
 
@@ -124,27 +124,64 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
   color: var(--primary);
 }
 
-/* Wochenraster Stundenplan */
-.week-grid {
+/* STUNDENPLAN TABELLE */
+.table-container {
+  overflow-x: auto;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 0.85rem;
+  min-width: 500px;
+}
+
+.schedule-table th, .schedule-table td {
+  padding: 10px 6px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.schedule-table th {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.schedule-table td.time-cell {
+  background: var(--bg);
+  font-weight: bold;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.cell-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 2px;
 }
 
-.day-column {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.day-title {
-  font-size: 1rem;
+.cell-subject {
   font-weight: bold;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 6px;
-  margin-bottom: 8px;
   color: var(--primary);
+}
+
+.cell-info {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.cell-delete {
+  border: none;
+  background: none;
+  color: red;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin-top: 4px;
 }
 
 /* Countdown Tag */
