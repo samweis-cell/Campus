@@ -14,7 +14,7 @@
   <header class="app-header">
     <div>
       <h1 id="header-title">Heute</h1>
-      <span id="app-version" class="version-badge">v6.0</span>
+      <span id="app-version" class="version-badge">v7.0</span>
     </div>
     <span id="header-date" class="date-badge"></span>
   </header>
@@ -39,7 +39,7 @@
     <section id="tab-stundenplan" class="tab-content">
       <div class="section-header">
         <h2>Stundenplan</h2>
-        <button class="btn-primary" id="btn-open-schedule-modal">+ Stunde</button>
+        <button class="btn-primary" id="btn-open-schedule-modal">+ Eintrag</button>
       </div>
       
       <!-- Klassische Stundenplan-Tabelle -->
@@ -112,20 +112,29 @@
   <!-- MODALS -->
   <div id="modal-backdrop" class="modal-backdrop">
     
-    <!-- Modal: Stunde -->
+    <!-- Modal: Stunde / Pause -->
     <div id="modal-schedule" class="modal-card">
-      <h3>Stunde hinzufügen / bearbeiten</h3>
+      <h3>Eintrag hinzufügen</h3>
       <form id="form-schedule">
+        
+        <label>Typ</label>
+        <select id="sched-type">
+          <option value="lesson">📚 Unterrichtsstunde</option>
+          <option value="pause">☕ Pause</option>
+        </select>
+
         <label>Stunde / Slot</label>
         <select id="sched-slot" required>
-          <option value="1">1. Stunde</option>
-          <option value="2">2. Stunde</option>
-          <option value="3">3. Stunde</option>
-          <option value="4">4. Stunde</option>
-          <option value="5">5. Stunde</option>
-          <option value="6">6. Stunde</option>
-          <option value="7">7. Stunde</option>
-          <option value="8">8. Stunde</option>
+          <option value="1">1. Stunde / Slot</option>
+          <option value="2">2. Stunde / Slot</option>
+          <option value="3">3. Stunde / Slot</option>
+          <option value="4">4. Stunde / Slot</option>
+          <option value="5">5. Stunde / Slot</option>
+          <option value="6">6. Stunde / Slot</option>
+          <option value="7">7. Stunde / Slot</option>
+          <option value="8">8. Stunde / Slot</option>
+          <option value="9">9. Stunde / Slot</option>
+          <option value="10">10. Stunde / Slot</option>
         </select>
 
         <label>Wochentag</label>
@@ -137,28 +146,33 @@
           <option value="Fr">Freitag</option>
         </select>
 
-        <div class="row">
-          <div>
-            <label>Startzeit</label>
-            <input type="time" id="sched-start" required>
-          </div>
-          <div>
-            <label>Endzeit</label>
-            <input type="time" id="sched-end" required>
-          </div>
+        <label>Startzeit (Tastatur-Eingabe)</label>
+        <div class="row time-input-row">
+          <input type="number" id="sched-start-hh" placeholder="HH (z.B. 07)" min="0" max="23" required>
+          <span class="time-colon">:</span>
+          <input type="number" id="sched-start-mm" placeholder="MM (z.B. 50)" min="0" max="59" required>
         </div>
-        <small style="color:var(--text-muted); display:block; margin-top:4px;">
-          💡 Uhrzeiten für diese Stunde werden automatisch auf alle Tage angewendet.
-        </small>
 
-        <label>Fach</label>
-        <input type="text" id="sched-subject" placeholder="z. B. Mathematik" required>
+        <label>Dauer (in Minuten)</label>
+        <input type="number" id="sched-duration" placeholder="z. B. 45" value="45" min="1" required>
 
-        <label>Lehrer</label>
-        <input type="text" id="sched-teacher" placeholder="z. B. Fr. Schmidt">
+        <!-- Unterrichts-Felder -->
+        <div id="fields-lesson">
+          <label>Fach</label>
+          <input type="text" id="sched-subject" placeholder="z. B. Mathematik">
 
-        <label>Raum</label>
-        <input type="text" id="sched-room" placeholder="z. B. 204">
+          <label>Lehrer</label>
+          <input type="text" id="sched-teacher" placeholder="z. B. Fr. Schmidt">
+
+          <label>Raum</label>
+          <input type="text" id="sched-room" placeholder="z. B. 204">
+        </div>
+
+        <!-- Pausen-Feld -->
+        <div id="fields-pause" style="display: none;">
+          <label>Name der Pause (optional)</label>
+          <input type="text" id="sched-pause-name" placeholder="z. B. Große Pause">
+        </div>
 
         <div class="modal-actions">
           <button type="button" class="btn-secondary" onclick="closeModal()">Abbrechen</button>
@@ -256,3 +270,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+

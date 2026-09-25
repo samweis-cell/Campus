@@ -1,4 +1,4 @@
-const CACHE_NAME = 'schul-planer-v6';
+const CACHE_NAME = 'schul-planer-v7';
 const urlsToCache = [
   './',
   './index.html',

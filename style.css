@@ -143,7 +143,7 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
 .schedule-table th, .schedule-table td {
   padding: 10px 6px;
   border: 1px solid var(--border);
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .schedule-table th {
@@ -157,6 +157,17 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
   font-weight: bold;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+/* Pausenzeile in der Tabelle */
+.pause-row {
+  background: rgba(234, 179, 8, 0.1) !important;
+}
+
+.pause-cell {
+  background: rgba(234, 179, 8, 0.08);
+  font-weight: bold;
+  color: #d97706;
 }
 
 .cell-content {
@@ -182,6 +193,16 @@ h3 { margin: 1.2rem 0 0.6rem; font-size: 1.1rem; }
   font-size: 0.75rem;
   cursor: pointer;
   margin-top: 4px;
+}
+
+/* Zeit-Tastatureingabe */
+.time-input-row {
+  align-items: center;
+}
+
+.time-colon {
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 
 /* Countdown Tag */

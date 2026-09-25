@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const APP_VERSION = 'v6.0';
+  const APP_VERSION = 'v7.0';
   const versionElem = document.getElementById('app-version');
   if (versionElem) versionElem.innerText = APP_VERSION;
 
@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let grades = JSON.parse(localStorage.getItem('pwa_grades')) || [];
   let schedule = JSON.parse(localStorage.getItem('pwa_schedule')) || [];
   let exams = JSON.parse(localStorage.getItem('pwa_exams')) || [];
-  // Speichert die Uhrzeiten pro Stundennummer (z.B. { "1": { start: "07:50", end: "08:35" } })
   let slotTimes = JSON.parse(localStorage.getItem('pwa_slot_times')) || {};
 
   function saveAll() {
@@ -65,23 +64,57 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(modalId).classList.add('active');
   }
 
-  document.getElementById('btn-open-schedule-modal').addEventListener('click', () => openModal('modal-schedule'));
+  document.getElementById('btn-open-schedule-modal').addEventListener('click', () => {
+    fillModalSlotData();
+    openModal('modal-schedule');
+  });
   document.getElementById('btn-open-grade-modal').addEventListener('click', () => openModal('modal-grade'));
   document.getElementById('btn-open-task-modal').addEventListener('click', () => openModal('modal-task'));
   document.getElementById('btn-open-exam-modal').addEventListener('click', () => openModal('modal-exam'));
 
-  // Formular-Automatik: Wenn Slot im Modal geändert wird, gelernte Uhrzeit eintragen
-  const schedSlotSelect = document.getElementById('sched-slot');
-  const schedStartInput = document.getElementById('sched-start');
-  const schedEndInput = document.getElementById('sched-end');
+  // Umschalten Unterricht vs. Pause
+  const typeSelect = document.getElementById('sched-type');
+  const fieldsLesson = document.getElementById('fields-lesson');
+  const fieldsPause = document.getElementById('fields-pause');
 
-  schedSlotSelect.addEventListener('change', () => {
-    const selectedSlot = schedSlotSelect.value;
-    if (slotTimes[selectedSlot]) {
-      schedStartInput.value = slotTimes[selectedSlot].start;
-      schedEndInput.value = slotTimes[selectedSlot].end;
+  typeSelect.addEventListener('change', () => {
+    if (typeSelect.value === 'pause') {
+      fieldsLesson.style.display = 'none';
+      fieldsPause.style.display = 'block';
+    } else {
+      fieldsLesson.style.display = 'block';
+      fieldsPause.style.display = 'none';
     }
   });
+
+  // Automatisches Einfüllen der gemerkten Uhrzeit beim Slot-Wechsel
+  const slotSelect = document.getElementById('sched-slot');
+  const startHH = document.getElementById('sched-start-hh');
+  const startMM = document.getElementById('sched-start-mm');
+  const durationInput = document.getElementById('sched-duration');
+
+  function fillModalSlotData() {
+    const slot = slotSelect.value;
+    if (slotTimes[slot]) {
+      startHH.value = slotTimes[slot].hh || '';
+      startMM.value = slotTimes[slot].mm || '';
+      durationInput.value = slotTimes[slot].duration || '45';
+    }
+  }
+
+  slotSelect.addEventListener('change', fillModalSlotData);
+
+  // Hilfsfunktion: Endzeit berechnen
+  function calcEndTime(hh, mm, durationMinutes) {
+    let startMins = parseInt(hh) * 60 + parseInt(mm);
+    let endMins = startMins + parseInt(durationMinutes);
+    let endHH = Math.floor(endMins / 60) % 24;
+    let endMM = endMins % 60;
+    
+    let formatHH = String(endHH).padStart(2, '0');
+    let formatMM = String(endMM).padStart(2, '0');
+    return `${formatHH}:${formatMM}`;
+  }
 
   // HEUTE MODUS
   function updateHeuteMode() {
@@ -90,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayStr = daysMap[now.getDay()];
     const currentTimeStr = now.toTimeString().substring(0, 5);
 
-    const todayLessons = schedule.filter(s => s.day === todayStr)
+    const todayLessons = schedule.filter(s => s.day === todayStr || s.type === 'pause')
                                  .sort((a,b) => (a.start || '').localeCompare(b.start || ''));
 
     const currentElem = document.getElementById('current-subject');
@@ -120,13 +153,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (currentLesson) {
-      currentElem.innerText = `🧮 ${currentLesson.subject}`;
-      detailsElem.innerText = `Raum ${currentLesson.room || '-'} · ${currentLesson.teacher || '-'}`;
-      nextElem.innerText = nextLesson ? `Danach: ${nextLesson.subject} (${nextLesson.room || '-'})` : 'Danach: Schulschluss 🎉';
+      if (currentLesson.type === 'pause') {
+        currentElem.innerText = `☕ ${currentLesson.subject || 'Pause'}`;
+        detailsElem.innerText = `Pause bis ${currentLesson.end} Uhr`;
+      } else {
+        currentElem.innerText = `🧮 ${currentLesson.subject}`;
+        detailsElem.innerText = `Raum ${currentLesson.room || '-'} · ${currentLesson.teacher || '-'}`;
+      }
+      nextElem.innerText = nextLesson ? `Danach: ${nextLesson.subject}` : 'Danach: Schulschluss 🎉';
     } else if (nextLesson) {
       currentElem.innerText = '☕ Pause / Warten';
       detailsElem.innerText = `Nächste Stunde ab ${nextLesson.start} Uhr`;
-      nextElem.innerText = `Danach: ${nextLesson.subject} (${nextLesson.room || '-'})`;
+      nextElem.innerText = `Danach: ${nextLesson.subject}`;
     } else {
       currentElem.innerText = '🏠 Feierabend';
       detailsElem.innerText = 'Der Unterricht für heute ist beendet';
@@ -140,38 +178,59 @@ document.addEventListener('DOMContentLoaded', () => {
     tbody.innerHTML = '';
 
     const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
-    const totalSlots = 8; // 1. bis 8. Stunde
+    const totalSlots = 10;
 
     for (let slot = 1; slot <= totalSlots; slot++) {
       const tr = document.createElement('tr');
 
       // Uhrzeit für diesen Slot ermitteln
-      const timeInfo = slotTimes[slot] ? `${slotTimes[slot].start} - ${slotTimes[slot].end}` : 'Zeit ?';
+      const st = slotTimes[slot];
+      let timeInfo = 'Zeit ?';
+      if (st && st.hh && st.mm && st.duration) {
+        const hh = String(st.hh).padStart(2, '0');
+        const mm = String(st.mm).padStart(2, '0');
+        const startStr = `${hh}:${mm}`;
+        const endStr = calcEndTime(hh, mm, st.duration);
+        timeInfo = `${startStr} - ${endStr}`;
+      }
 
-      // 1. Spalte: Slot & Uhrzeit
-      let rowHtml = `<td class="time-cell"><strong>${slot}. Std</strong><br><small>${timeInfo}</small></td>`;
+      // Prüfen ob dieser Slot eine Pause für alle Tage ist
+      const pauseEntry = schedule.find(s => parseInt(s.slot) === slot && s.type === 'pause');
 
-      // 5 Spalten für Mo-Fr
-      days.forEach(day => {
-        const entry = schedule.find(s => parseInt(s.slot) === slot && s.day === day);
+      if (pauseEntry) {
+        tr.className = 'pause-row';
+        tr.innerHTML = `
+          <td class="time-cell"><strong>Pause</strong><br><small>${timeInfo}</small></td>
+          <td colspan="5" class="pause-cell">
+            ☕ ${pauseEntry.subject || 'Pause'} (${pauseEntry.duration} Min)
+            <button class="cell-delete" onclick="deleteSchedule(${pauseEntry.id})">🗑️</button>
+          </td>
+        `;
+      } else {
+        let rowHtml = `<td class="time-cell"><strong>${slot}. Std</strong><br><small>${timeInfo}</small></td>`;
 
-        if (entry) {
-          rowHtml += `
-            <td>
-              <div class="cell-content">
-                <span class="cell-subject">${entry.subject}</span>
-                <span class="cell-info">R: ${entry.room || '-'}</span>
-                <span class="cell-info">${entry.teacher || '-'}</span>
-                <button class="cell-delete" onclick="deleteSchedule(${entry.id})">🗑️</button>
-              </div>
-            </td>
-          `;
-        } else {
-          rowHtml += `<td>-</td>`;
-        }
-      });
+        days.forEach(day => {
+          const entry = schedule.find(s => parseInt(s.slot) === slot && s.day === day);
 
-      tr.innerHTML = rowHtml;
+          if (entry) {
+            rowHtml += `
+              <td>
+                <div class="cell-content">
+                  <span class="cell-subject">${entry.subject}</span>
+                  <span class="cell-info">R: ${entry.room || '-'}</span>
+                  <span class="cell-info">${entry.teacher || '-'}</span>
+                  <button class="cell-delete" onclick="deleteSchedule(${entry.id})">🗑️</button>
+                </div>
+              </td>
+            `;
+          } else {
+            rowHtml += `<td>-</td>`;
+          }
+        });
+
+        tr.innerHTML = rowHtml;
+      }
+
       tbody.appendChild(tr);
     }
   }
@@ -185,35 +244,49 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('form-schedule').addEventListener('submit', (e) => {
     e.preventDefault();
 
+    const type = document.getElementById('sched-type').value;
     const slot = document.getElementById('sched-slot').value;
     const day = document.getElementById('sched-day').value;
-    const start = document.getElementById('sched-start').value;
-    const end = document.getElementById('sched-end').value;
+    
+    const hh = String(document.getElementById('sched-start-hh').value).padStart(2, '0');
+    const mm = String(document.getElementById('sched-start-mm').value).padStart(2, '0');
+    const duration = document.getElementById('sched-duration').value;
 
-    // 1. Uhrzeiten für diese Stundennummer global/automatisch speichern
-    slotTimes[slot] = { start, end };
+    const startStr = `${hh}:${mm}`;
+    const endStr = calcEndTime(hh, mm, duration);
 
-    // 2. Alle bestehenden Einträge derselben Stundennummer auf die neuen Uhrzeiten aktualisieren
-    schedule.forEach(s => {
-      if (s.slot === slot) {
-        s.start = start;
-        s.end = end;
-      }
-    });
+    // 1. Uhrzeiten für diesen Slot speichern (gilt für alle Tage!)
+    slotTimes[slot] = { hh, mm, duration };
 
-    // 3. Vorherigen Eintrag an demselben Tag in demselben Slot ersetzen falls vorhanden
-    schedule = schedule.filter(s => !(s.slot === slot && s.day === day));
-
-    schedule.push({
-      id: Date.now(),
-      slot,
-      day,
-      start,
-      end,
-      subject: document.getElementById('sched-subject').value,
-      teacher: document.getElementById('sched-teacher').value,
-      room: document.getElementById('sched-room').value
-    });
+    // 2. Bestehenden Eintrag überschreiben
+    if (type === 'pause') {
+      // Pause gilt für den ganzen Slot
+      schedule = schedule.filter(s => parseInt(s.slot) !== parseInt(slot));
+      schedule.push({
+        id: Date.now(),
+        type: 'pause',
+        slot,
+        start: startStr,
+        end: endStr,
+        duration,
+        subject: document.getElementById('sched-pause-name').value || 'Pause'
+      });
+    } else {
+      // Normaler Unterricht für einen Wochentag
+      schedule = schedule.filter(s => !(parseInt(s.slot) === parseInt(slot) && s.day === day));
+      schedule.push({
+        id: Date.now(),
+        type: 'lesson',
+        slot,
+        day,
+        start: startStr,
+        end: endStr,
+        duration,
+        subject: document.getElementById('sched-subject').value,
+        teacher: document.getElementById('sched-teacher').value,
+        room: document.getElementById('sched-room').value
+      });
+    }
 
     saveAll();
     renderSchedule();
@@ -427,4 +500,5 @@ document.addEventListener('DOMContentLoaded', () => {
   renderExams();
   updateHeuteMode();
 });
+
 
