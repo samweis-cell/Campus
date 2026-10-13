@@ -1,10 +1,11 @@
-const CACHE_NAME = 'schulplaner-v9';
+const CACHE_NAME = 'campus-v1.0.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
   './app.js',
-  './manifest.json'
+  './manifest.json',
+  './icon.svg'
 ];
 
 // Installation & Dateicaching
@@ -31,7 +32,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Anfragen abfangen (Network-First: Versucht immer erst die neuste Version zu laden)
+// Network-First Fetch-Strategie
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)

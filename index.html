@@ -3,8 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Schul-Planer</title>
+  <title>Campus Planer</title>
+  
   <link rel="manifest" href="manifest.json">
+  
+  <!-- App Icons -->
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+
   <link rel="stylesheet" href="style.css">
   <meta name="theme-color" content="#4f46e5">
 </head>
@@ -17,7 +23,7 @@
         <h1 id="header-title">Heute</h1>
         <span id="header-date" class="header-date"></span>
       </div>
-      <span id="app-version" class="version-badge">v9.0</span>
+      <span id="app-version" class="version-badge">v1.0.0</span>
     </div>
   </header>
 
@@ -304,8 +310,8 @@
     </form>
   </div>
 
-  <!-- Cache-Busting via Query-Parameter ?v=9.0 -->
-  <script src="app.js?v=9.0"></script>
+  <!-- Cache-Busting mit v1.0.0 -->
+  <script src="app.js?v=1.0.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
