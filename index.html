@@ -23,7 +23,7 @@
         <h1 id="header-title">Heute</h1>
         <span id="header-date" class="header-date"></span>
       </div>
-      <span id="app-version" class="version-badge">v1.0.0</span>
+      <span id="app-version" class="version-badge">v1.0.2</span>
     </div>
   </header>
 
@@ -68,7 +68,18 @@
       </div>
     </section>
 
-    <!-- TAB 3: AUFGABEN -->
+    <!-- TAB 3: FÄCHER (NEU) -->
+    <section id="tab-faecher" class="tab-content">
+      <div class="actions-bar">
+        <button id="btn-open-subject-modal" class="btn btn-primary">+ Fach hinzufügen</button>
+      </div>
+      <div id="subjects-list" class="task-list">
+        <!-- Wird in späteren Updates befüllt -->
+        <p style="color: gray;">Noch keine Fächer eingetragen.</p>
+      </div>
+    </section>
+
+    <!-- TAB 4: AUFGABEN -->
     <section id="tab-aufgaben" class="tab-content">
       <div class="actions-bar">
         <button id="btn-open-task-modal" class="btn btn-primary">+ Aufgabe hinzufügen</button>
@@ -76,7 +87,7 @@
       <div id="all-tasks" class="task-list"></div>
     </section>
 
-    <!-- TAB 4: ARBEITEN -->
+    <!-- TAB 5: ARBEITEN -->
     <section id="tab-arbeiten" class="tab-content">
       <div class="actions-bar">
         <button id="btn-open-exam-modal" class="btn btn-primary">+ Arbeit eintragen</button>
@@ -84,7 +95,7 @@
       <div id="exam-list" class="task-list"></div>
     </section>
 
-    <!-- TAB 5: NOTEN -->
+    <!-- TAB 6: NOTEN -->
     <section id="tab-noten" class="tab-content">
       <div class="card summary-card">
         <div class="card-subtitle">Notendurchschnitt</div>
@@ -119,6 +130,10 @@
     <button class="nav-btn" data-tab="stundenplan">
       <span class="nav-icon">🕒</span>
       <span class="nav-label">Plan</span>
+    </button>
+    <button class="nav-btn" data-tab="faecher">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Fächer</span>
     </button>
     <button class="nav-btn" data-tab="aufgaben">
       <span class="nav-icon">✅</span>
@@ -310,8 +325,7 @@
     </form>
   </div>
 
-  <!-- Cache-Busting mit v1.0.0 -->
-  <script src="app.js?v=1.0.0"></script>
+  <script src="app.js?v=1.0.2"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

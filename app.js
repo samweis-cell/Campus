@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const APP_VERSION = 'v1.0.0';
+  const APP_VERSION = 'v1.0.2';
   const versionElem = document.getElementById('app-version');
   if (versionElem) versionElem.innerText = APP_VERSION;
 
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     '6': 6.0
   };
 
-  // Navigation
+  // Navigation (Erweitert um 'faecher')
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const tabId = btn.getAttribute('data-tab');
@@ -30,8 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById(`tab-${tabId}`).classList.add('active');
       btn.classList.add('active');
       
-      const titles = { heute: 'Heute', stundenplan: 'Stundenplan', aufgaben: 'Aufgaben', arbeiten: 'Arbeiten', noten: 'Noten' };
-      document.getElementById('header-title').innerText = titles[tabId] || 'Schul-Planer';
+      const titles = { 
+        heute: 'Heute', 
+        stundenplan: 'Stundenplan', 
+        faecher: 'Fächer', 
+        aufgaben: 'Aufgaben', 
+        arbeiten: 'Arbeiten', 
+        noten: 'Noten' 
+      };
+      document.getElementById('header-title').innerText = titles[tabId] || 'Campus Planer';
     });
   });
 
