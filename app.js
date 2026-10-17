@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const APP_VERSION = 'v1.0.3';
+  const APP_VERSION = 'v1.0.4';
   const versionElem = document.getElementById('app-version');
   if (versionElem) versionElem.innerText = APP_VERSION;
 
@@ -75,7 +75,23 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(modalId).classList.add('active');
   }
 
-  // FÄCHER RENDERN (KACHEL-LEISTE)
+  // Hilfsfunktion: Hex-Farbe in geschmackvollen dunklen Ton umwandeln
+  function hexToDarkBg(hex) {
+    if (!hex || hex.length < 6) return '#1e293b';
+    let c = hex.replace('#', '');
+    let r = parseInt(c.substring(0,2), 16);
+    let g = parseInt(c.substring(2,4), 16);
+    let b = parseInt(c.substring(4,6), 16);
+
+    // Stark abgedunkelte Version für den Hintergrund
+    r = Math.floor(r * 0.25);
+    g = Math.floor(g * 0.25);
+    b = Math.floor(b * 0.25);
+
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  // FÄCHER RENDERN & DRAG & DROP SORTIERUNG
   function renderSubjects() {
     const grid = document.getElementById('subjects-grid');
     grid.innerHTML = '';
@@ -85,25 +101,71 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    subjects.forEach(sub => {
+    subjects.forEach((sub, index) => {
       const card = document.createElement('div');
       card.className = 'subject-card';
-      card.style.setProperty('--subject-color', sub.color || '#4f46e5');
+      card.setAttribute('draggable', 'true');
+      card.setAttribute('data-index', index);
+
+      const colorMain = sub.color || '#4f46e5';
+      const colorDark = hexToDarkBg(colorMain);
+
+      card.style.setProperty('--subject-color', colorMain);
+      card.style.setProperty('--subject-color-dark', colorDark);
 
       card.innerHTML = `
         <div class="subject-info">
           <span class="subject-title">${sub.name}</span>
           <span class="subject-sub">${sub.teacher || 'Kein Lehrer'}</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="subject-controls">
+          <button class="sort-btn" onclick="event.stopPropagation(); moveSubject(${index}, -1)">▲</button>
+          <button class="sort-btn" onclick="event.stopPropagation(); moveSubject(${index}, 1)">▼</button>
           <button class="subject-delete-btn" onclick="event.stopPropagation(); deleteSubject(${sub.id})">🗑️</button>
-          <div class="subject-arrow">➔</div>
         </div>
       `;
+
+      // Drag & Drop Events
+      card.addEventListener('dragstart', (e) => {
+        card.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', index);
+      });
+
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+      });
+
+      card.addEventListener('dragover', (e) => {
+        e.preventDefault();
+      });
+
+      card.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        const toIndex = index;
+
+        if (fromIndex !== toIndex) {
+          const movedItem = subjects.splice(fromIndex, 1)[0];
+          subjects.splice(toIndex, 0, movedItem);
+          saveAll();
+          renderSubjects();
+        }
+      });
 
       grid.appendChild(card);
     });
   }
+
+  // Manuelles Verschieben per Pfeil
+  window.moveSubject = function(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= subjects.length) return;
+
+    const movedItem = subjects.splice(index, 1)[0];
+    subjects.splice(newIndex, 0, movedItem);
+    saveAll();
+    renderSubjects();
+  };
 
   window.deleteSubject = function(id) {
     subjects = subjects.filter(s => s.id !== id);

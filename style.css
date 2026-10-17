@@ -1,85 +1,113 @@
-/* FÄCHER GRID & KACHELN (NEU FÜR v1.0.3) */
+/* FÄCHER GRID & KACHELN (v1.0.4 - Ganzflächige Farben & Drag&Drop) */
 .subjects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
 }
 
 .subject-card {
-  background-color: #1e293b;
-  border-radius: 10px;
-  padding: 12px 16px;
+  /* Nutzt die gewählte Fachfarbe leicht abgedunkelt als Hintergrund */
+  background: linear-gradient(135deg, var(--subject-color-dark, #1e293b) 0%, #0f172a 100%);
+  border: 1px solid var(--subject-color, #4f46e5);
+  border-radius: 12px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-  transition: transform 0.15s ease, background-color 0.15s ease;
-  cursor: pointer;
-  border: 1px solid #334155;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: grab;
+  user-select: none;
 }
 
-.subject-card:hover {
-  transform: translateY(-2px);
-  background-color: #26334d;
+.subject-card:active {
+  cursor: grabbing;
 }
 
-/* Der bunte Streifen auf der linken Seite */
+.subject-card.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+/* Der leuchtende Farb-Akzent-Streifen links oben */
 .subject-card::before {
   content: '';
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 6px;
+  width: 8px;
   background-color: var(--subject-color, #4f46e5);
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  box-shadow: 2px 0 8px var(--subject-color, #4f46e5);
 }
 
 .subject-info {
   display: flex;
   flex-direction: column;
-  padding-left: 4px;
+  padding-left: 8px;
 }
 
 .subject-title {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 .subject-sub {
-  font-size: 0.8rem;
-  color: #94a3b8;
-  margin-top: 2px;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  margin-top: 3px;
 }
 
-.subject-arrow {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.05);
+/* Steuerungselemente auf der Kachel (Sortieren + Löschen) */
+.subject-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sort-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
-  font-size: 0.9rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: background 0.2s;
+}
+
+.sort-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .subject-delete-btn {
-  background: none;
-  border: none;
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-size: 0.85rem;
-  padding: 4px;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  font-size: 0.8rem;
+  transition: background 0.2s;
 }
 
 .subject-delete-btn:hover {
-  opacity: 1;
+  background: rgba(239, 68, 68, 0.4);
 }
 
 .color-picker-input {
@@ -88,7 +116,7 @@
   cursor: pointer;
 }
 
-/* RESTLICHE BESTEHENDE STYLES BLEIBEN UNVERÄNDERT */
+/* RESTLICHE BASIS-STYLES */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
 body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 70px; }
 .app-header { background-color: #1e293b; padding: 16px 20px; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 10; }
