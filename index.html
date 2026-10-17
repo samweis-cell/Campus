@@ -23,7 +23,7 @@
         <h1 id="header-title">Heute</h1>
         <span id="header-date" class="header-date"></span>
       </div>
-      <span id="app-version" class="version-badge">v1.0.2</span>
+      <span id="app-version" class="version-badge">v1.0.3</span>
     </div>
   </header>
 
@@ -68,14 +68,13 @@
       </div>
     </section>
 
-    <!-- TAB 3: FÄCHER (NEU) -->
+    <!-- TAB 3: FÄCHER -->
     <section id="tab-faecher" class="tab-content">
       <div class="actions-bar">
         <button id="btn-open-subject-modal" class="btn btn-primary">+ Fach hinzufügen</button>
       </div>
-      <div id="subjects-list" class="task-list">
-        <!-- Wird in späteren Updates befüllt -->
-        <p style="color: gray;">Noch keine Fächer eingetragen.</p>
+      <div id="subjects-grid" class="subjects-grid">
+        <!-- Fach-Kacheln werden hier geladen -->
       </div>
     </section>
 
@@ -151,6 +150,55 @@
 
   <!-- MODAL BACKDROP -->
   <div id="modal-backdrop" class="modal-backdrop" onclick="closeModal()"></div>
+
+  <!-- MODAL: FACH ERSTELLEN -->
+  <div id="modal-subject" class="modal-card">
+    <h3>Erstelle Fach</h3>
+    <form id="form-subject">
+      <div class="form-group">
+        <label>Name des Fachs</label>
+        <input type="text" id="subj-name" placeholder="z. B. Mathematik" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Farbe</label>
+          <input type="color" id="subj-color" value="#3b82f6" class="color-picker-input">
+        </div>
+        <div class="form-group">
+          <label>Abkürzung</label>
+          <input type="text" id="subj-short" placeholder="z. B. M / MAT">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Fächerkategorie</label>
+        <select id="subj-category">
+          <option value="Hauptfach">Hauptfach</option>
+          <option value="Nebenfach">Nebenfach</option>
+          <option value="Keine" selected>Keine</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Lehrer / Professor</label>
+        <input type="text" id="subj-teacher" placeholder="z. B. Fr. Wagener">
+      </div>
+
+      <div class="form-group">
+        <label>Raum / Ort</label>
+        <input type="text" id="subj-room" placeholder="z. B. R 123">
+        <small style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">
+          Standard-Raum für das Fach. Kann im Stundenplan überschrieben werden.
+        </small>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+        <button type="submit" class="btn btn-primary">Speichern</button>
+      </div>
+    </form>
+  </div>
 
   <!-- MODAL: STUNDENPLAN / PAUSE -->
   <div id="modal-schedule" class="modal-card">
@@ -325,7 +373,7 @@
     </form>
   </div>
 
-  <script src="app.js?v=1.0.2"></script>
+  <script src="app.js?v=1.0.3"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

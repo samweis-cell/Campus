@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const APP_VERSION = 'v1.0.2';
+  const APP_VERSION = 'v1.0.3';
   const versionElem = document.getElementById('app-version');
   if (versionElem) versionElem.innerText = APP_VERSION;
 
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     '6': 6.0
   };
 
-  // Navigation (Erweitert um 'faecher')
+  // Navigation
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const tabId = btn.getAttribute('data-tab');
@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Speicher
+  let subjects = JSON.parse(localStorage.getItem('pwa_subjects')) || [];
   let tasks = JSON.parse(localStorage.getItem('pwa_tasks')) || [];
   let grades = JSON.parse(localStorage.getItem('pwa_grades')) || [];
   let schedule = JSON.parse(localStorage.getItem('pwa_schedule')) || [];
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let slotTimes = JSON.parse(localStorage.getItem('pwa_slot_times')) || {};
 
   function saveAll() {
+    localStorage.setItem('pwa_subjects', JSON.stringify(subjects));
     localStorage.setItem('pwa_tasks', JSON.stringify(tasks));
     localStorage.setItem('pwa_grades', JSON.stringify(grades));
     localStorage.setItem('pwa_schedule', JSON.stringify(schedule));
@@ -73,7 +75,69 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(modalId).classList.add('active');
   }
 
-  // Formular-Elemente
+  // FÄCHER RENDERN (KACHEL-LEISTE)
+  function renderSubjects() {
+    const grid = document.getElementById('subjects-grid');
+    grid.innerHTML = '';
+
+    if (subjects.length === 0) {
+      grid.innerHTML = '<p style="color: gray; grid-column: 1/-1;">Noch keine Fächer eingetragen.</p>';
+      return;
+    }
+
+    subjects.forEach(sub => {
+      const card = document.createElement('div');
+      card.className = 'subject-card';
+      card.style.setProperty('--subject-color', sub.color || '#4f46e5');
+
+      card.innerHTML = `
+        <div class="subject-info">
+          <span class="subject-title">${sub.name}</span>
+          <span class="subject-sub">${sub.teacher || 'Kein Lehrer'}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="subject-delete-btn" onclick="event.stopPropagation(); deleteSubject(${sub.id})">🗑️</button>
+          <div class="subject-arrow">➔</div>
+        </div>
+      `;
+
+      grid.appendChild(card);
+    });
+  }
+
+  window.deleteSubject = function(id) {
+    subjects = subjects.filter(s => s.id !== id);
+    saveAll();
+    renderSubjects();
+  };
+
+  // FACH MODAL & FORMULAR
+  document.getElementById('btn-open-subject-modal').addEventListener('click', () => {
+    document.getElementById('form-subject').reset();
+    openModal('modal-subject');
+  });
+
+  document.getElementById('form-subject').addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const newSubject = {
+      id: Date.now(),
+      name: document.getElementById('subj-name').value,
+      color: document.getElementById('subj-color').value,
+      short: document.getElementById('subj-short').value,
+      category: document.getElementById('subj-category').value,
+      teacher: document.getElementById('subj-teacher').value,
+      room: document.getElementById('subj-room').value
+    };
+
+    subjects.push(newSubject);
+    saveAll();
+    renderSubjects();
+    closeModal();
+    e.target.reset();
+  });
+
+  // Formular-Elemente Stundenplan
   const typeSelect = document.getElementById('sched-type');
   const fieldsLesson = document.getElementById('fields-lesson');
   const fieldsPause = document.getElementById('fields-pause');
@@ -99,7 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Zeit-Hilfsfunktionen
   function calcEndTime(hh, mm, durationMinutes) {
     let startMins = parseInt(hh) * 60 + parseInt(mm);
     let endMins = startMins + parseInt(durationMinutes);
@@ -113,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // Automatische Zeitberechnung für Pausen
   function fillPauseTimeData() {
     const afterSlot = pauseAfterSelect.value;
     const st = slotTimes[afterSlot];
@@ -581,6 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Initialisierung
+  renderSubjects();
   renderTasks();
   renderGrades();
   renderSchedule();
