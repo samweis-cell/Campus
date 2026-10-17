@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const APP_VERSION = 'v9.0';
+  const APP_VERSION = 'v1.0.0';
   const versionElem = document.getElementById('app-version');
   if (versionElem) versionElem.innerText = APP_VERSION;
 
